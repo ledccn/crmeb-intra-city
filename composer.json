@@ -1,0 +1,41 @@
+{
+  "name": "ledc/crmeb-intra-city",
+  "description": "Crmeb单商户系统-微信同城配送&闪送",
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Ledc\\CrmebIntraCity\\": "app/",
+      "Ledc\\IntraCity\\": "src/"
+    },
+    "files": [
+      "app/helper.php"
+    ]
+  },
+  "authors": [
+    {
+      "name": "david",
+      "email": "367013672@qq.com",
+      "homepage": "https://www.iyuu.cn",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": ">=7.4",
+    "topthink/framework": ">=6.0",
+    "ledc/think-model-trait": "^7.2.18",
+    "ledc/crmeb-delivery-slot-booking": "^7.0",
+    "ledc/intra-city": "^7.0",
+    "ledc/shan-song": "^7.0",
+    "ext-json": "*",
+    "ext-openssl": "*",
+    "ext-curl": "*"
+  },
+  "extra": {
+    "think": {
+      "services": [
+        "Ledc\\CrmebIntraCity\\Service"
+      ]
+    }
+  }
+}
