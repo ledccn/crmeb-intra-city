@@ -6,7 +6,6 @@ use app\model\order\StoreOrderStatus;
 use Ledc\CrmebIntraCity\enums\OrderChangeTypeEnums;
 use Ledc\CrmebIntraCity\enums\TransOrderStatusEnums;
 use Ledc\CrmebIntraCity\services\DeliveryServices;
-use Ledc\CrmebIntraCity\services\WechatTemplateService;
 use SplObserver;
 use SplSubject;
 use think\db\exception\DataNotFoundException;

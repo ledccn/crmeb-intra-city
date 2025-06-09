@@ -311,12 +311,7 @@ class ShanSongService
      */
     public function orderPlace(StoreOrder $storeOrder, ShanSongParameters $shanSongParameters): OrderPlaceResponse
     {
-        $locker = new RedisLocker('shansong_order_place_' . $storeOrder->order_id);
         try {
-            if (!$locker->acquire()) {
-                throw new ValidateException('操作频繁，请稍后再试');
-            }
-
             CreateOrderValidate::beforeValidate($storeOrder);
 
             $orderCalculateResponse = $this->orderCalculate($storeOrder, $shanSongParameters);
@@ -351,8 +346,6 @@ class ShanSongService
         } catch (Throwable $throwable) {
             Log::error('闪送提交订单异常:' . $throwable->getMessage());
             throw new ValidateException($throwable->getMessage());
-        } finally {
-            $locker->release();
         }
     }
 

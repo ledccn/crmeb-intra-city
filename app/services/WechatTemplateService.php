@@ -55,8 +55,8 @@ class WechatTemplateService
         // 待发笔数{{character_string13.DATA}}
         // 超时笔数{{character_string14.DATA}}
         // 门店名称{{thing17.DATA}}
-        $this->sendTemplate($notification->wechat_tempid, [
-            'amount3' => $query->sum('total_price'),
+        $this->sendTemplate($notification, [
+            'amount3' => bcadd((string)$query->sum('total_price'), '0', 2),
             'time12' => date('Y-m-d H:i:s'),
             'character_string13' => $query->count(),
             'character_string14' => OrderDao::queryPending(0)->count(),
@@ -82,13 +82,47 @@ class WechatTemplateService
         // 下单时间{{time4.DATA}}
         // 异常时间{{time6.DATA}}
         // 异常原因{{const5.DATA}}
-        $this->sendTemplate($notification->wechat_tempid, [
+        $this->sendTemplate($notification, [
             'character_string1' => $storeOrder->order_id,
-            'amount3' => $storeOrder->total_price,
-            'time4' => $storeOrder->add_time,
+            'amount3' => bcadd((string)$storeOrder->total_price, '0', 2),
+            'time4' => date('Y-m-d H:i:s', $storeOrder->add_time),
             'time6' => date('Y-m-d H:i:s'),
-            'const5' => $reason,
+            //'const5' => $reason,
         ]);
+    }
+
+    /**
+     * 发送模板消息
+     * @param SystemNotification $notification
+     * @param array $data
+     * @return void
+     */
+    public function sendTemplate(SystemNotification $notification, array $data)
+    {
+        $this->adminList->each(function (StoreService $storeService) use ($notification, $data) {
+            $openid = $this->getOpenid($storeService->uid);
+            if ($openid) {
+                $templateId = $notification->wechat_tempid;
+                $link = $notification->wechat_link ?: null;
+                $wechat_to_routine = $notification->wechat_to_routine;
+                //放入队列执行
+                TemplateJob::dispatch('doJob', ['wechat', $openid, $templateId, $data, $link, null, $wechat_to_routine]);
+            }
+        });
+    }
+
+    /**
+     * 根据UID获取openid
+     * @param int $uid 用户 UID
+     * @return string
+     */
+    protected function getOpenid(int $uid): string
+    {
+        $user = User::findOrEmpty($uid);
+        if ($user->isEmpty() || $user->is_del) {
+            return '';
+        }
+        return WechatUser::where('uid', $uid)->where('user_type', 'wechat')->value('openid', '');
     }
 
     /**
@@ -108,37 +142,5 @@ class WechatTemplateService
             return null;
         }
         return $notification;
-    }
-
-    /**
-     * 根据UID获取openid
-     * @param int $uid 用户 UID
-     * @return string
-     */
-    protected function getOpenid(int $uid): string
-    {
-        $user = User::findOrEmpty($uid);
-        if ($user->isEmpty() || $user->is_del) {
-            return '';
-        }
-        return WechatUser::where('uid', $uid)->where('user_type', 'wechat')->value('openid', '');
-    }
-
-    /**
-     * 发送模板消息
-     * @param string $templateId
-     * @param array $data
-     * @param string|null $link
-     * @return void
-     */
-    public function sendTemplate(string $templateId, array $data, ?string $link = null)
-    {
-        $this->adminList->each(function (StoreService $storeService) use ($templateId, $data, $link) {
-            $openid = $this->getOpenid($storeService->uid);
-            if ($openid) {
-                //放入队列执行
-                TemplateJob::dispatch('doJob', ['wechat', $openid, $templateId, $data, $link, null]);
-            }
-        });
     }
 }

@@ -69,7 +69,7 @@ class StoreOrderDevelop
             throw new InvalidArgumentException('预期送达时间不能为空');
         }
 
-        if ($this->expected_finished_time < Helper::appointmentTimestamp()) {
+        if ($this->expected_finished_time < (Helper::appointmentTimestamp() - 600)) {
             throw new InvalidArgumentException('预期送达时间必须为' . Helper::config()->getPreparationTime() . '分钟之后');
         }
 

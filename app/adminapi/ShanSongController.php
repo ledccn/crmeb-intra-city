@@ -98,12 +98,10 @@ class ShanSongController
         ], true);
         $storeOrder = $this->getStoreOrder($id);
 
-        log_develop($request->secureKey() . '闪送订单计费接口入参:' . json_encode($request->post(false), JSON_UNESCAPED_UNICODE));
         $result = $this->services->orderCalculate(
             $storeOrder,
             ShanSongParameters::make($params)->setStoreOrder($storeOrder)
         );
-        log_develop($request->secureKey() . '闪送订单计费接口返回:' . json_encode($result->jsonSerialize(), JSON_UNESCAPED_UNICODE));
         return response_json()->success('ok', $result->jsonSerialize());
     }
 

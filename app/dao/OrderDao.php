@@ -16,11 +16,11 @@ class OrderDao
 {
     /**
      * 查询订单
-     * - 默认查询30天前至今已支付且未退款且未取消的订单
+     * - 默认查询180天前至今已支付且未退款且未取消的订单
      * @param int $days_ago 从X天前开始查询
      * @return StoreOrder|BaseQuery|Query
      */
-    public static function query(int $days_ago = 30): Query
+    public static function query(int $days_ago = 180): Query
     {
         $model = new StoreOrder();
         return $model->db()->where('paid', StoreOrderPaidEnums::PAID)
