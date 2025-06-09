@@ -71,6 +71,15 @@ class ShanSongService
     }
 
     /**
+     * 设置为生产环境
+     * @return void
+     */
+    protected function setProdEnv(): void
+    {
+        $this->getConfig()->setDebug(false);
+    }
+
+    /**
      * 获取闪送配置
      * @return Config
      */
@@ -108,6 +117,8 @@ class ShanSongService
     {
         if ($debug) {
             $this->setTestEnv();
+        } else {
+            $this->setProdEnv();
         }
         return $this->merchant->queryAllStores($pageNo, $pageSize, $storeName);
     }
