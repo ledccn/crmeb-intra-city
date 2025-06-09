@@ -62,13 +62,14 @@ class ShanSongController
      */
     public function queryAllStores(Request $request): Response
     {
-        [$page, $limit, $storeName] = $request->getMore([
+        [$page, $limit, $storeName, $debug] = $request->getMore([
             ['page/d', 1],
             ['limit/d', 20],
-            ['store_name', '']
+            ['store_name', ''],
+            ['debug/b', false],
         ], true);
 
-        return response_json()->success('ok', $this->services->queryAllStores($page, $limit, $storeName));
+        return response_json()->success('ok', $this->services->queryAllStores($page, $limit, $storeName, $debug));
     }
 
     /**

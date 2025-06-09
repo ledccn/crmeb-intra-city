@@ -32,12 +32,13 @@ class OrderChangeService
      */
     public function changeExpectedFinishedTime(string $expected_finished_start_time, string $expected_finished_end_time): bool
     {
-        if ($expected_finished_start_time > $expected_finished_end_time) {
+        $expected_finished_time = strtotime($expected_finished_start_time);
+        $end_time = strtotime($expected_finished_end_time);
+        if ($expected_finished_time > $end_time) {
             throw new ValidateException('期望送达时间错误');
         }
 
-        $expected_finished_time = strtotime($expected_finished_start_time);
-        if (date('Y-m-d', $expected_finished_time) !== date('Y-m-d', strtotime($expected_finished_end_time))) {
+        if (date('Y-m-d', $expected_finished_time) !== date('Y-m-d', $end_time)) {
             throw new ValidateException('期望送达时间必须在同一天');
         }
 

@@ -39,11 +39,6 @@ use Throwable;
 class ShanSongService
 {
     /**
-     * 闪送配置
-     * @var Config
-     */
-    protected Config $config;
-    /**
      * 闪送自营商户
      * @var Merchant
      */
@@ -55,7 +50,33 @@ class ShanSongService
     public function __construct()
     {
         $this->merchant = ShanSongHelper::merchant();
-        $this->config = $this->merchant->getConfig();
+    }
+
+    /**
+     * 获取闪送自营商户
+     * @return Merchant
+     */
+    public function getMerchant(): Merchant
+    {
+        return $this->merchant;
+    }
+
+    /**
+     * 设置为测试环境调试模式
+     * @return void
+     */
+    protected function setTestEnv(): void
+    {
+        $this->getConfig()->setDebug(true);
+    }
+
+    /**
+     * 获取闪送配置
+     * @return Config
+     */
+    public function getConfig(): Config
+    {
+        return $this->getMerchant()->getConfig();
     }
 
     /**
@@ -64,7 +85,7 @@ class ShanSongService
      */
     public function openCitiesLists(): array
     {
-        $cacheKey = 'shansong_open_cities_lists' . $this->config->autoShopId();
+        $cacheKey = 'shansong_open_cities_lists' . $this->getConfig()->autoShopId();
         $data = Cache::get($cacheKey);
         if ($data) {
             return $data;
@@ -80,10 +101,14 @@ class ShanSongService
      * @param int $pageNo
      * @param int $pageSize
      * @param string $storeName
+     * @param bool $debug
      * @return array
      */
-    public function queryAllStores(int $pageNo = 1, int $pageSize = 20, string $storeName = ''): array
+    public function queryAllStores(int $pageNo = 1, int $pageSize = 20, string $storeName = '', bool $debug = false): array
     {
+        if ($debug) {
+            $this->setTestEnv();
+        }
         return $this->merchant->queryAllStores($pageNo, $pageSize, $storeName);
     }
 
@@ -94,7 +119,7 @@ class ShanSongService
      */
     public function optionalTravelWay(int $cityId): array
     {
-        $cacheKey = 'shansong_optional_travel_way_' . $this->config->autoShopId() . $cityId;
+        $cacheKey = 'shansong_optional_travel_way_' . $this->getConfig()->autoShopId() . $cityId;
         $data = Cache::get($cacheKey);
         if ($data) {
             return $data;
@@ -189,7 +214,7 @@ class ShanSongService
 
         $orderCalculate = new OrderCalculate();
         $orderCalculate->cityName = $systemStore->shansong_city_name;
-        $orderCalculate->storeId = $systemStore->shansong_store_id;
+        $orderCalculate->storeId = $this->getConfig()->isDebug() ? $systemStore->shansong_store_id_test : $systemStore->shansong_store_id;
         $orderCalculate->deliveryPwd = 1;
         $orderCalculate->sender = $sender;
         $orderCalculate->receiverList = $receiverList;
@@ -241,7 +266,7 @@ class ShanSongService
 
         $orderCalculate = new OrderCalculate();
         $orderCalculate->cityName = $systemStore->shansong_city_name;
-        $orderCalculate->storeId = $systemStore->shansong_store_id;
+        $orderCalculate->storeId = $this->getConfig()->isDebug() ? $systemStore->shansong_store_id_test : $systemStore->shansong_store_id;
         $orderCalculate->deliveryPwd = 1;
         $orderCalculate->sender = $sender;
 
@@ -327,7 +352,7 @@ class ShanSongService
 
             // 更新订单表
             $storeOrder->db()->transaction(function () use ($storeOrder, $orderPlaceResponse) {
-                $storeOrder->wechat_wx_store_id = $this->config->autoShopId();
+                $storeOrder->wechat_wx_store_id = $this->getConfig()->autoShopId();
                 $storeOrder->wechat_wx_order_id = $orderPlaceResponse->orderNumber;
                 $storeOrder->wechat_service_trans_id = ServiceTransEnums::TRANS_SHANSONG;
                 $storeOrder->wechat_distance = $orderPlaceResponse->totalDistance;
@@ -540,7 +565,7 @@ class ShanSongService
             return 429;
         }
 
-        $this->config->verifyNotify($notify);
+        $this->getConfig()->verifyNotify($notify);
 
         // 调度事件
         Event::trigger(Notify::class, $notify);

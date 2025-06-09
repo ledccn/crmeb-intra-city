@@ -87,6 +87,9 @@ final class ShanSongParameters extends Parameters
     public function __construct(array $properties = [])
     {
         if (!empty($properties)) {
+            // 前端传过来的是布尔值，需要转换成数字
+            $properties['qualityDelivery'] = isset($properties['qualityDelivery']) && $properties['qualityDelivery'] ? 1 : null;
+            $properties['insuranceFlag'] = isset($properties['insuranceFlag']) && $properties['insuranceFlag'] ? 1 : 0;
             $this->setExists(true);
             $this->initProperties($properties);
             $this->validate($properties);

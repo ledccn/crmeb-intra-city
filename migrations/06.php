@@ -37,6 +37,8 @@ class UpdateSystemStoreShanSong extends Migrator
             ->addColumn(Column::string(\Ledc\ShanSong\Config::CONFIG_PREFIX . 'city_name')->setComment('闪送店铺所在城市名称')->setLimit(100)->setNull(false)->setDefault(''))
             ->addColumn(Column::string(\Ledc\ShanSong\Config::CONFIG_PREFIX . 'latitude')->setComment('闪送纬度（百度坐标系）')->setLimit(20)->setNull(false)->setDefault(''))
             ->addColumn(Column::string(\Ledc\ShanSong\Config::CONFIG_PREFIX . 'longitude')->setComment('闪送经度（百度坐标系）')->setLimit(20)->setNull(false)->setDefault(''))
+            ->addColumn(Column::string(\Ledc\ShanSong\Config::CONFIG_PREFIX . 'store_id_test')->setComment('闪送店铺ID(测试环境)')->setLimit(20)->setNull(false)->setDefault(''))
+            ->addColumn(Column::unsignedInteger(\Ledc\ShanSong\Config::CONFIG_PREFIX . 'city_id_test')->setComment('闪送店铺所在城市ID(测试环境)')->setNull(false)->setDefault(0))
             ->update();
     }
 }
