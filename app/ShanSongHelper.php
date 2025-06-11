@@ -13,6 +13,11 @@ use think\App;
 class ShanSongHelper
 {
     /**
+     * 闪送门店ID
+     */
+    public const SHANSONG_STORE_ID = 'shansong_store_id';
+
+    /**
      * 闪送是否启用
      * @return bool
      */

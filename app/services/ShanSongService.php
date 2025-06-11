@@ -171,6 +171,9 @@ class ShanSongService
      */
     protected static function builderSender(SystemStore $systemStore): OrderCalculateSender
     {
+        if (!$systemStore->shansong_latitude || !$systemStore->shansong_longitude) {
+            throw new ValidateException('请绑定闪送店铺经纬度');
+        }
         $sender = new OrderCalculateSender();
         $sender->fromAddress = $systemStore->detailed_address;
         $sender->fromAddressDetail = $systemStore->address . ' ' . $systemStore->detailed_address;

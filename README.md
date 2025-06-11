@@ -12,6 +12,11 @@ Crmeb单商户系统-微信同城配送&闪送
 
 2. 执行数据库迁移 `php think migrate:run`
 
+## 订单状态回调地址
+
+1. 闪送 `https://您的域名/intra_city_callback/shansong`
+2. 微信 `https://您的域名/intra_city_callback/wechat`
+
 ## 修改过的文件
 
 1. `\app\adminapi\controller\v1\order\StoreOrder::lst`
