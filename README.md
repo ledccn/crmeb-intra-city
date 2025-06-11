@@ -4,7 +4,7 @@ Crmeb单商户系统-微信同城配送&闪送
 
 ## 安装
 
-`composer require crmeb-intra-city`
+`composer require ledc/crmeb-intra-city`
 
 ## 使用说明
 
