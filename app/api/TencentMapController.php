@@ -25,7 +25,7 @@ class TencentMapController
         $latitude = $request->param('latitude');
         $longitude = $request->param('longitude');
         $parameters = new Location2AddressParameters(
-            LbsTencentHelper::getAppIdKey(),
+            LbsTencentHelper::getIpKey(),
             $latitude,
             $longitude
         );

@@ -29,6 +29,7 @@ class LbsTencentService
     {
         $curl = new Curl();
         $curl->setTimeout()->setSslVerify();
+        $curl->setReferer(sys_config('site_url'));
         $curl->get(Location2AddressParameters::BASE_URL, $parameters->toArray());
 
         return self::parseHttpResponse($curl);
