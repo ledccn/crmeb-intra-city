@@ -40,6 +40,8 @@ class Command extends \think\console\Command
             'CreatePricingIncreaseStrategy' => dirname(__DIR__) . '/migrations/07.php',
             // 订单待发货提醒、异常订单处理通知
             'InsertSystemNotificationException' => dirname(__DIR__) . '/migrations/08.php',
+            // 地理位置腾讯地图 KEY
+            'InsertSystemConfigLbs' => dirname(__DIR__) . '/migrations/09.php',
         ]);
     }
 

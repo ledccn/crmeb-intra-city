@@ -5,6 +5,7 @@ use app\api\middleware\StationOpenMiddleware;
 use app\http\middleware\AllowOriginMiddleware;
 use Ledc\CrmebIntraCity\api\OrderController;
 use Ledc\CrmebIntraCity\api\ShanSongController;
+use Ledc\CrmebIntraCity\api\TencentMapController;
 use Ledc\CrmebIntraCity\api\WechatController;
 use think\facade\Route;
 
@@ -36,6 +37,12 @@ Route::group('intra_city_api', function () {
         Route::get('order_info/:id', implode('@', [ShanSongController::class, 'orderInfo']));
         // 查询闪送员位置信息
         Route::get('courier_info/:id', implode('@', [ShanSongController::class, 'courierInfo']));
+    });
+
+    // 腾讯地图
+    Route::group('tencent_map', function () {
+        // 逆地址解析（坐标位置描述）
+        Route::any('location2address', implode('@', [TencentMapController::class, 'location2address']));
     });
 })->middleware(AllowOriginMiddleware::class)
     ->middleware(StationOpenMiddleware::class)
