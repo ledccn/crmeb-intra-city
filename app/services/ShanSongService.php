@@ -16,6 +16,7 @@ use Ledc\CrmebIntraCity\ShanSongHelper;
 use Ledc\IntraCity\Enums\CargoTypeEnums;
 use Ledc\ShanSong\Config;
 use Ledc\ShanSong\Conversion;
+use Ledc\ShanSong\Enums\AppointTypeEnums;
 use Ledc\ShanSong\Enums\GoodTypeEnums;
 use Ledc\ShanSong\Enums\OrderingSourceTypeEnums;
 use Ledc\ShanSong\Merchant;
@@ -188,9 +189,10 @@ class ShanSongService
      * 购物车信息配送订单计费
      * @param array $cartInfo
      * @param UserAddress $userAddress
+     * @param int $expected_finished_time
      * @return OrderCalculateResponse
      */
-    public function cartInfoCalculate(array $cartInfo, UserAddress $userAddress): OrderCalculateResponse
+    public function cartInfoCalculate(array $cartInfo, UserAddress $userAddress, int $expected_finished_time = 0): OrderCalculateResponse
     {
         // TODO... 根据用户地理位置匹配最佳提货点
         $systemStore = self::getSystemStore(0);
@@ -227,12 +229,16 @@ class ShanSongService
         $receiverList->add($receiver);
 
         $orderCalculate = new OrderCalculate();
+        if (OrderCalculate::checkAppointment($expected_finished_time, false)) {
+            $orderCalculate->appointType = AppointTypeEnums::APPOINTMENT;
+            $orderCalculate->appointmentDate = OrderCalculate::formatedAppointmentDate($expected_finished_time);
+        }
         $orderCalculate->cityName = $systemStore->shansong_city_name;
         $orderCalculate->storeId = $this->getConfig()->isDebug() ? $systemStore->shansong_store_id_test : $systemStore->shansong_store_id;
         $orderCalculate->deliveryPwd = 1;
         $orderCalculate->sender = $sender;
         $orderCalculate->receiverList = $receiverList;
-        log_develop('闪送订单计费参数:  ' . json_encode($orderCalculate, JSON_UNESCAPED_UNICODE));
+        log_develop(request()->secureKey() . '【请求】闪送预估运费参数:  ' . json_encode($orderCalculate, JSON_UNESCAPED_UNICODE));
         return $this->merchant->orderCalculate($orderCalculate);
     }
 
