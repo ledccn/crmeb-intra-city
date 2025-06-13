@@ -88,7 +88,7 @@ class StoreOrderDevelop
     {
         $expected_finished_time = $request->post('expected_finished_time');
         if (empty($expected_finished_time)) {
-            $expected_finished_time = StoreOrderDevelop::defaultOwnerAppointTime();
+            $expected_finished_time = Helper::appointmentTimestamp();
             $expected_finished_start_time = date('Y-m-d H:i:s', $expected_finished_time);
             $expected_finished_end_time = date('Y-m-d H:i:s', $expected_finished_time);
         } else {
