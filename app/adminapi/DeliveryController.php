@@ -44,7 +44,7 @@ class DeliveryController
     {
         [$id, $service_trans_id, $params] = $request->postMore([
             'id/d',
-            ['service_trans_id/s', ''],
+            ['service_trans_id/s', ServiceTransEnums::TRANS_SHANSONG],
             ['params/a', []],
         ], true);
 
