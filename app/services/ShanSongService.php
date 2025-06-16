@@ -149,20 +149,7 @@ class ShanSongService
      */
     public static function getSystemStore(int $system_store_id): SystemStore
     {
-        if ($system_store_id) {
-            /** @var SystemStore $systemStore */
-            $systemStore = SystemStore::findOrEmpty($system_store_id);
-        } else {
-            /** @var SystemStore $systemStore */
-            $systemStore = SystemStore::where(['is_show' => 1, 'is_del' => 0])
-                ->order('id', 'asc')
-                ->findOrEmpty();
-        }
-        if ($systemStore->isEmpty()) {
-            throw new ValidateException('店铺提货点设置为空');
-        }
-
-        return $systemStore;
+        return SystemStoreService::getSystemStore($system_store_id);
     }
 
     /**
@@ -195,7 +182,7 @@ class ShanSongService
     public function cartInfoCalculate(array $cartInfo, UserAddress $userAddress, int $expected_finished_time = 0): OrderCalculateResponse
     {
         // TODO... 根据用户地理位置匹配最佳提货点
-        $systemStore = self::getSystemStore(0);
+        $systemStore = SystemStoreService::getSystemStore(0);
         if ($userAddress->isEmpty()) {
             throw new ValidateException('收货地址为空');
         }
@@ -250,7 +237,7 @@ class ShanSongService
      */
     public function orderCalculate(StoreOrder $storeOrder, ShanSongParameters $shanSongParameters): OrderCalculateResponse
     {
-        $systemStore = self::getSystemStore($storeOrder->store_id);
+        $systemStore = SystemStoreService::getSystemStore($storeOrder->store_id);
 
         $user_address_object = $storeOrder->user_address_object;
         if (empty($user_address_object)) {

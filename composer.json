@@ -22,7 +22,7 @@
   "require": {
     "php": ">=7.4",
     "topthink/framework": ">=6.0",
-    "ledc/think-model-trait": "^7.2.21",
+    "ledc/think-model-trait": "^7.2.28",
     "ledc/crmeb-delivery-slot-booking": "^7.2.18",
     "ledc/intra-city": "^7.0",
     "ledc/shan-song": "^7.0.11",

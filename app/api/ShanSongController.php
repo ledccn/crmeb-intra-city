@@ -39,14 +39,14 @@ class ShanSongController
      */
     public function notifyCallback(Request $request): Response
     {
-        $uniqid = uniqid();
-        log_develop($uniqid . '闪送 订单状态回调：' . json_encode($request->post(false), JSON_UNESCAPED_UNICODE));
+        $uniqid = $request->secureKey();
+        log_develop($uniqid . ' 闪送 订单状态回调：' . json_encode($request->post(false), JSON_UNESCAPED_UNICODE));
         try {
             $notify = new Notify($request->post(false));
             $status = $this->services->notifyCallback($notify);
             $msg = '';
         } catch (Throwable $throwable) {
-            Log::error($uniqid . '闪送 订单状态回调异常：' . $throwable->getMessage());
+            Log::error($uniqid . ' 闪送 订单状态回调异常：' . $throwable->getMessage());
             $status = 400;
             $msg = $throwable->getMessage();
         }
