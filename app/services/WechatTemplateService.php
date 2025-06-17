@@ -92,6 +92,28 @@ class WechatTemplateService
     }
 
     /**
+     * 配送订单待审核时通知客服
+     * @param StoreOrder $storeOrder
+     * @return void
+     */
+    public function sendAdminOrderAudit(StoreOrder $storeOrder)
+    {
+        $notification = $this->getSystemNotification(NotificationTemplateEnums::ADMIN_ORDER_AUDIT);
+        if (!$notification) {
+            return;
+        }
+
+        // 订单编号{{character_string1.DATA}}
+        // 订单金额{{amount6.DATA}}
+        // 审核时间{{time5.DATA}}
+        $this->sendTemplate($notification, [
+            'character_string1' => $storeOrder->order_id,
+            'amount6' => bcadd((string)$storeOrder->total_price, '0', 2),
+            'time5' => date('Y-m-d'),
+        ]);
+    }
+
+    /**
      * 发送模板消息
      * @param SystemNotification $notification
      * @param array $data

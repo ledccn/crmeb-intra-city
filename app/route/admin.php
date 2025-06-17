@@ -35,10 +35,14 @@ Route::group('intra-city-admin', function () {
     Route::group('store_order', function () {
         // 审核变更地址
         Route::put('audit_change_address/:id', implode('@', [OrderController::class, 'auditChangeAddress']));
+        // 审核变更期望送达时间
+        Route::put('audit_change_expected_finished_time/:id', implode('@', [OrderController::class, 'auditChangeExpectedFinishedTime']));
         // 统计
         Route::get('statistics', implode('@', [OrderController::class, 'statistics']));
         // 获取用户地址
         Route::get('user_address/:address_id', implode('@', [OrderController::class, 'userAddress']));
+        // 获取变更期望送达时间缓存
+        Route::get('change_expected_finished_time_cache/:id', implode('@', [OrderController::class, 'getChangeExpectedFinishedTimeCache']));
         // 查询即将超时的待发货订单
         Route::get('pending', implode('@', [OrderController::class, 'pending']));
     });

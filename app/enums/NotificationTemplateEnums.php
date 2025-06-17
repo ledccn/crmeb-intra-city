@@ -15,4 +15,8 @@ class NotificationTemplateEnums
      * 异常订单处理通知客服
      */
     public const ADMIN_ORDER_EXCEPTION = 'admin_order_exception';
+    /**
+     * 配送订单审核通知客服
+     */
+    public const ADMIN_ORDER_AUDIT = 'admin_order_audit';
 }

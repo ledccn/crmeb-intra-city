@@ -44,6 +44,21 @@ class InsertSystemNotificationException extends Migrator
                 'type' => 2,
                 'add_time' => time(),
             ],
+            [
+                'mark' => NotificationTemplateEnums::ADMIN_ORDER_AUDIT,
+                'name' => '配送订单审核通知',
+                'title' => '配送订单审核通知客服',
+                'is_system' => 2,
+                'system_title' => '配送订单审核通知',
+                'system_text' => '存在待审核的配送订单，请及时处理',
+                'is_wechat' => 1,
+                'wechat_tempkey' => '55303',
+                'wechat_content' => implode("\n", ['订单编号{{character_string1.DATA}}', '订单金额{{amount6.DATA}}', '审核时间{{time5.DATA}}']),
+                'wechat_tempid' => '',
+                'wechat_to_routine' => 1,
+                'type' => 2,
+                'add_time' => time(),
+            ],
         ];
         $this->table('system_notification')
             ->insert($list)

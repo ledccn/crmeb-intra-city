@@ -19,4 +19,8 @@ class OrderChangeTypeEnums
      * 订单变更类型：变更地址
      */
     public const CHANGE_ADDRESS = 'change_address';
+    /**
+     * 订单变更类型：变更期望送达时间
+     */
+    public const CHANGE_EXPECTED_FINISHED_TIME = 'change_expected_finished_time';
 }

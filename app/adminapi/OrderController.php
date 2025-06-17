@@ -9,9 +9,11 @@ use Ledc\CrmebIntraCity\dao\OrderDao;
 use Ledc\CrmebIntraCity\enums\TransOrderStatusEnums;
 use Ledc\CrmebIntraCity\locker\OrderLocker;
 use Ledc\CrmebIntraCity\services\OrderAddressService;
+use Ledc\CrmebIntraCity\services\OrderChangeService;
 use think\db\exception\DataNotFoundException;
 use think\db\exception\DbException;
 use think\db\exception\ModelNotFoundException;
+use think\exception\ValidateException;
 use think\Response;
 
 /**
@@ -49,14 +51,42 @@ class OrderController
             ['force/b', false],
         ], true);
 
+        $storeOrder = $this->getStoreOrder($id);
         $locker = OrderLocker::changeAddress($id);
         if (!$locker->acquire()) {
             return response_json()->fail('未获取到锁，请稍后再试');
         }
 
-        $service = new OrderAddressService($this->getStoreOrder($id));
+        $service = new OrderAddressService($storeOrder);
         $service->auditChangeAddress($state, $reason, $force);
 
+        return response_json()->success();
+    }
+
+    /**
+     * 审核变更期望送达时间
+     * @param int $id
+     * @param Request $request
+     * @return Response
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     */
+    public function auditChangeExpectedFinishedTime(int $id, Request $request): Response
+    {
+        [$state, $reason, $force] = $request->postMore([
+            ['state/b', false],
+            ['reason/s', ''],
+            ['force/b', false],
+        ], true);
+
+        $storeOrder = $this->getStoreOrder($id);
+        $locker = OrderLocker::changeExpectedFinishedTime($storeOrder->id);
+        if (!$locker->acquire()) {
+            throw new ValidateException('未获取到锁，请稍后再试');
+        }
+
+        $service = new OrderChangeService($storeOrder);
+        $service->auditChangeExpectedFinishedTime($state, $reason, $force);
         return response_json()->success();
     }
 
@@ -108,5 +138,20 @@ class OrderController
             return response_json()->fail('用户地址不存在');
         }
         return response_json()->success('ok', $userAddress->toArray());
+    }
+
+    /**
+     * 获取变更期望送达时间缓存
+     * @param int $id
+     * @param Request $request
+     * @return Response
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     */
+    public function getChangeExpectedFinishedTimeCache(int $id, Request $request): Response
+    {
+        $storeOrder = $this->getStoreOrder($id);
+        $service = new OrderChangeService($storeOrder);
+        return response_json()->success('ok', $service->getCache());
     }
 }

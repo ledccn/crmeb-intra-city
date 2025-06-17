@@ -55,7 +55,7 @@ Route::group('intra_city_api', function () {
         // 提交变更订单地址的申请
         Route::post('change_order_address/:id', implode('@', [OrderController::class, 'changeOrderAddress']));
         // 变更订单期望送达时间
-        Route::post('change_expected_finished_time/:id', implode('@', [OrderController::class, 'changeExpectedFinishedTime']))->middleware(LockerMiddleware::class, LockerParameters::builderUid());
+        Route::post('change_expected_finished_time/:id', implode('@', [OrderController::class, 'changeExpectedFinishedTime']));
     });
 
     // 闪送相关

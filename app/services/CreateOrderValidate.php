@@ -60,6 +60,13 @@ class CreateOrderValidate
             throw new ValidateException('该订单已呼叫骑手，请勿重复操作');
         }
 
+        if ($storeOrder->change_user_address_id) {
+            throw new ValidateException('存在修改收货地址，请处理后再发单');
+        }
+        if ($storeOrder->change_expected_finished_audit) {
+            throw new ValidateException('存在修改配送时间，请处理后再发单');
+        }
+
         return $orderInfo;
     }
 }

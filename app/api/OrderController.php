@@ -7,8 +7,10 @@ use app\model\user\UserAddress;
 use app\Request;
 use Ledc\CrmebIntraCity\locker\OrderLocker;
 use Ledc\CrmebIntraCity\services\OrderChangeService;
+use Ledc\CrmebIntraCity\services\WechatTemplateService;
 use think\db\exception\DataNotFoundException;
 use think\db\exception\ModelNotFoundException;
+use think\exception\ValidateException;
 use think\Response;
 
 /**
@@ -45,12 +47,12 @@ class OrderController
             return response_json()->fail('请选择收货地址');
         }
 
+        $storeOrder = $this->getStoreOrder($id);
         $locker = OrderLocker::changeAddress($id);
         if (!$locker->acquire()) {
             return response_json()->fail('未获取到锁，请稍后再试');
         }
 
-        $storeOrder = $this->getStoreOrder($id);
         $userAddress = UserAddress::findOrFail($user_address_id);
         if ($storeOrder->uid !== $userAddress->uid) {
             return response_json()->fail('收货地址不属于当前用户');
@@ -58,11 +60,16 @@ class OrderController
 
         $storeOrder->change_user_address_id = $user_address_id;
         $storeOrder->save();
+
+        // 提醒客服
+        $wechatTemplateService = new WechatTemplateService();
+        $wechatTemplateService->sendAdminOrderAudit($storeOrder);
+
         return response_json()->success('提交成功，请耐心等待审核或联系客服加快处理');
     }
 
     /**
-     * 变更订单期望送达时间
+     * 提交变更订单期望送达时间的申请
      * @param int $id
      * @param Request $request
      * @return Response
@@ -77,9 +84,19 @@ class OrderController
             return response_json()->fail('请选择期望送达时间');
         }
 
-        $service = new OrderChangeService($this->getStoreOrder($id));
-        $service->changeExpectedFinishedTime($expected_finished_start_time, $expected_finished_end_time);
+        $storeOrder = $this->getStoreOrder($id);
+        $locker = OrderLocker::changeExpectedFinishedTime($storeOrder->id);
+        if (!$locker->acquire()) {
+            throw new ValidateException('未获取到锁，请稍后再试');
+        }
 
-        return response_json()->success('修改成功');
+        $service = new OrderChangeService($storeOrder);
+        $service->validateExpectedFinishedTime($expected_finished_start_time, $expected_finished_end_time);
+
+        // 提醒客服
+        $wechatTemplateService = new WechatTemplateService();
+        $wechatTemplateService->sendAdminOrderAudit($storeOrder);
+
+        return response_json()->success('提交成功，请耐心等待审核或联系客服加快处理');
     }
 }

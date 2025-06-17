@@ -3,9 +3,11 @@
 namespace Ledc\CrmebIntraCity\services;
 
 use app\model\order\StoreOrder;
-use Ledc\CrmebIntraCity\locker\OrderLocker;
+use app\model\order\StoreOrderStatus;
+use Ledc\CrmebIntraCity\enums\OrderChangeTypeEnums;
 use Ledc\CrmebIntraCity\parameters\HasStoreOrder;
 use think\exception\ValidateException;
+use think\facade\Cache;
 
 /**
  * 订单变更服务
@@ -24,13 +26,50 @@ class OrderChangeService
     }
 
     /**
-     * 变更订单期望送达时间
+     * 审核变更订单期望送达时间
+     * @param bool $state 审核状态：true 通过，false 拒绝
+     * @param string $reason 审核原因
+     * @param bool $force 是否强制操作（审核状态true时，取消订单可能产生费用，需传true）
+     * @return bool
+     */
+    public function auditChangeExpectedFinishedTime(bool $state, string $reason, bool $force): bool
+    {
+        $storeOrder = $this->getStoreOrder();
+        // 记录订单变更日志
+        StoreOrderStatus::create([
+            'oid' => $storeOrder->id,
+            'change_type' => OrderChangeTypeEnums::CHANGE_EXPECTED_FINISHED_TIME,
+            'change_time' => time(),
+            'change_message' => '审核变更变更期望送达时间：【' . ($state ? '通过' : '拒绝') . '】' . $reason,
+        ]);
+        $cacheData = $this->getCache();
+        if (empty($cacheData)) {
+            throw new ValidateException('请先提交变更期望送达时间申请');
+        }
+
+        // 数据库事务：修改订单
+        $storeOrder->db()->transaction(function () use ($storeOrder, $cacheData) {
+            // 允许修改的字段
+            $fields = ['expected_finished_time', 'expected_finished_start_time', 'expected_finished_end_time'];
+            foreach ($fields as $field) {
+                if (!empty($cacheData[$field])) {
+                    $storeOrder->{$field} = $cacheData[$field];
+                }
+            }
+            $storeOrder->change_expected_finished_audit = 0;
+            $storeOrder->save();
+        });
+        return true;
+    }
+
+    /**
+     * 验证是否允许提交变更期望送达时间的申请
      * @param string $expected_finished_start_time 预期送达开始时间
      * @param string $expected_finished_end_time 预期送达结束时间
      * @return bool
      * @throws ValidateException
      */
-    public function changeExpectedFinishedTime(string $expected_finished_start_time, string $expected_finished_end_time): bool
+    public function validateExpectedFinishedTime(string $expected_finished_start_time, string $expected_finished_end_time): bool
     {
         $expected_finished_time = strtotime($expected_finished_start_time);
         $end_time = strtotime($expected_finished_end_time);
@@ -43,13 +82,8 @@ class OrderChangeService
         }
 
         $storeOrder = $this->getStoreOrder();
-        $locker = OrderLocker::changeExpectedFinishedTime($storeOrder->id);
-        if (!$locker->acquire()) {
-            throw new ValidateException('未获取到锁，请稍后再试');
-        }
-
         if ($this->getStoreOrder()->wechat_processed) {
-            throw new ValidateException('订单已呼叫配送员，如需修改请联系客服');
+            throw new ValidateException('订单已呼叫配送员，请联系客服');
         }
 
         if ($expected_finished_time <= $storeOrder->expected_finished_time) {
@@ -60,13 +94,58 @@ class OrderChangeService
             throw new ValidateException('修改后时间不能跨天');
         }
 
-        // 数据库事务：修改订单
-        $storeOrder->db()->transaction(function () use ($storeOrder, $expected_finished_time, $expected_finished_start_time, $expected_finished_end_time) {
-            $storeOrder->expected_finished_time = $expected_finished_time;
-            $storeOrder->expected_finished_start_time = $expected_finished_start_time;
-            $storeOrder->expected_finished_end_time = $expected_finished_end_time;
-            $storeOrder->save();
-        });
+        // 缓存用户提交的待变更数据
+        $this->setCache(compact('expected_finished_time', 'expected_finished_start_time', 'expected_finished_end_time'));
+        $storeOrder->change_expected_finished_audit = 1;
+        $storeOrder->save();
+
         return true;
+    }
+
+    /**
+     * 判断缓存是否存在
+     * @return bool
+     */
+    public function hasCache(): bool
+    {
+        return Cache::has($this->getCacheKey());
+    }
+
+    /**
+     * 获取缓存
+     * @return array
+     */
+    public function getCache(): array
+    {
+        return Cache::get($this->getCacheKey(), []);
+    }
+
+    /**
+     * 设置缓存
+     * @param array $data
+     * @return self
+     */
+    public function setCache(array $data): self
+    {
+        Cache::set($this->getCacheKey(), $data, $this->getCacheExpire());
+        return $this;
+    }
+
+    /**
+     * 获取缓存key
+     * @return string
+     */
+    public function getCacheKey(): string
+    {
+        return 'changeExpectedFinishedTime:' . $this->getStoreOrder()->id;
+    }
+
+    /**
+     * 获取缓存过期时间（10天）
+     * @return int
+     */
+    public function getCacheExpire(): int
+    {
+        return 864000;
     }
 }
