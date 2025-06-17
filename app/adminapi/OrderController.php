@@ -56,6 +56,9 @@ class OrderController
         if (!$locker->acquire()) {
             return response_json()->fail('未获取到锁，请稍后再试');
         }
+        if (!$storeOrder->change_user_address_id) {
+            throw new ValidateException('订单未申请变更收货人信息');
+        }
 
         $service = new OrderAddressService($storeOrder);
         $service->auditChangeAddress($state, $reason, $force);
@@ -83,6 +86,9 @@ class OrderController
         $locker = OrderLocker::changeExpectedFinishedTime($storeOrder->id);
         if (!$locker->acquire()) {
             throw new ValidateException('未获取到锁，请稍后再试');
+        }
+        if (!$storeOrder->change_expected_finished_audit) {
+            throw new ValidateException('订单未申请变更期望送达时间');
         }
 
         $service = new OrderChangeService($storeOrder);

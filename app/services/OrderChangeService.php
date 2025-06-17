@@ -40,25 +40,32 @@ class OrderChangeService
             'oid' => $storeOrder->id,
             'change_type' => OrderChangeTypeEnums::CHANGE_EXPECTED_FINISHED_TIME,
             'change_time' => time(),
-            'change_message' => '审核变更变更期望送达时间：【' . ($state ? '通过' : '拒绝') . '】' . $reason,
+            'change_message' => '审核变更期望送达时间：【' . ($state ? '通过' : '拒绝') . '】' . $reason,
         ]);
         $cacheData = $this->getCache();
         if (empty($cacheData)) {
-            throw new ValidateException('请先提交变更期望送达时间申请');
+            $storeOrder->change_expected_finished_audit = 0;
+            $storeOrder->save();
+            throw new ValidateException('申请变更期望送达时间的缓存为空');
         }
 
         // 数据库事务：修改订单
-        $storeOrder->db()->transaction(function () use ($storeOrder, $cacheData) {
-            // 允许修改的字段
-            $fields = ['expected_finished_time', 'expected_finished_start_time', 'expected_finished_end_time'];
-            foreach ($fields as $field) {
-                if (!empty($cacheData[$field])) {
-                    $storeOrder->{$field} = $cacheData[$field];
+        $storeOrder->db()->transaction(function () use ($storeOrder, $cacheData, $state) {
+            if ($state) {
+                // 允许修改的字段
+                $fields = ['expected_finished_time', 'expected_finished_start_time', 'expected_finished_end_time'];
+                foreach ($fields as $field) {
+                    if (!empty($cacheData[$field])) {
+                        $storeOrder->{$field} = $cacheData[$field];
+                    }
                 }
             }
+
             $storeOrder->change_expected_finished_audit = 0;
             $storeOrder->save();
         });
+        $this->deleteCache();
+
         return true;
     }
 
@@ -128,6 +135,16 @@ class OrderChangeService
     public function setCache(array $data): self
     {
         Cache::set($this->getCacheKey(), $data, $this->getCacheExpire());
+        return $this;
+    }
+
+    /**
+     * 删除缓存
+     * @return self
+     */
+    public function deleteCache(): self
+    {
+        Cache::delete($this->getCacheKey());
         return $this;
     }
 
