@@ -47,8 +47,7 @@ class AlarmService
                     // 调度事件
                     Event::trigger(AlarmPendingEvent::class, $alarmPendingEvent);
                     // 提醒客服
-                    $wechatTemplateService = new WechatTemplateService();
-                    $wechatTemplateService->sendAdminOrderTimeoutException();
+                    WechatTemplateService::sendAdminOrderTimeoutException();
                 }
             }
         } catch (Throwable $throwable) {

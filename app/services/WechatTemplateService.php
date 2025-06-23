@@ -10,10 +10,10 @@ use app\model\user\User;
 use app\model\wechat\WechatUser;
 use Ledc\CrmebIntraCity\dao\OrderDao;
 use Ledc\CrmebIntraCity\enums\NotificationTemplateEnums;
+use RuntimeException;
 use think\Collection;
-use think\db\exception\DataNotFoundException;
 use think\db\exception\DbException;
-use think\db\exception\ModelNotFoundException;
+use Throwable;
 
 /**
  * 微信模板消息服务
@@ -21,30 +21,13 @@ use think\db\exception\ModelNotFoundException;
 class WechatTemplateService
 {
     /**
-     * 客服列表
-     * @var Collection|StoreService[]
-     */
-    protected Collection $adminList;
-
-    /**
-     * 构造函数
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
-     */
-    public function __construct()
-    {
-        $this->adminList = StoreService::where(['status' => 1, 'notify' => 1])->field(['nickname', 'phone', 'uid', 'customer'])->select();
-    }
-
-    /**
      * 待发货超时提醒客服
      * @return bool
      * @throws DbException
      */
-    public function sendAdminOrderTimeoutException(): bool
+    public static function sendAdminOrderTimeoutException(): bool
     {
-        $notification = $this->getSystemNotification(NotificationTemplateEnums::ADMIN_ORDER_TIMEOUT_EXCEPTION);
+        $notification = static::getSystemNotification(NotificationTemplateEnums::ADMIN_ORDER_TIMEOUT_EXCEPTION);
         if (!$notification) {
             return false;
         }
@@ -55,7 +38,7 @@ class WechatTemplateService
         // 待发笔数{{character_string13.DATA}}
         // 超时笔数{{character_string14.DATA}}
         // 门店名称{{thing17.DATA}}
-        $this->sendTemplate($notification, [
+        static::sendTemplate($notification, [
             'amount3' => bcadd((string)$query->sum('total_price'), '0', 2),
             'time12' => date('Y-m-d H:i:s'),
             'character_string13' => $query->count(),
@@ -71,9 +54,9 @@ class WechatTemplateService
      * @param string $reason 异常原因（枚举值）
      * @return false|void
      */
-    public function sendAdminOrderException(StoreOrder $storeOrder, string $reason = '')
+    public static function sendAdminOrderException(StoreOrder $storeOrder, string $reason = '')
     {
-        $notification = $this->getSystemNotification(NotificationTemplateEnums::ADMIN_ORDER_EXCEPTION);
+        $notification = static::getSystemNotification(NotificationTemplateEnums::ADMIN_ORDER_EXCEPTION);
         if (!$notification) {
             return false;
         }
@@ -82,7 +65,7 @@ class WechatTemplateService
         // 下单时间{{time4.DATA}}
         // 异常时间{{time6.DATA}}
         // 异常原因{{const5.DATA}}
-        $this->sendTemplate($notification, [
+        static::sendTemplate($notification, [
             'character_string1' => $storeOrder->order_id,
             'amount3' => bcadd((string)$storeOrder->total_price, '0', 2),
             'time4' => date('Y-m-d H:i:s', $storeOrder->add_time),
@@ -96,17 +79,16 @@ class WechatTemplateService
      * @param StoreOrder $storeOrder
      * @return void
      */
-    public function sendAdminOrderAudit(StoreOrder $storeOrder)
+    public static function sendAdminOrderAudit(StoreOrder $storeOrder)
     {
-        $notification = $this->getSystemNotification(NotificationTemplateEnums::ADMIN_ORDER_AUDIT);
+        $notification = static::getSystemNotification(NotificationTemplateEnums::ADMIN_ORDER_AUDIT);
         if (!$notification) {
             return;
         }
-
         // 订单编号{{character_string1.DATA}}
         // 订单金额{{amount6.DATA}}
         // 审核时间{{time5.DATA}}
-        $this->sendTemplate($notification, [
+        static::sendTemplate($notification, [
             'character_string1' => $storeOrder->order_id,
             'amount6' => bcadd((string)$storeOrder->total_price, '0', 2),
             'time5' => date('Y-m-d'),
@@ -119,10 +101,10 @@ class WechatTemplateService
      * @param array $data
      * @return void
      */
-    public function sendTemplate(SystemNotification $notification, array $data)
+    public static function sendTemplate(SystemNotification $notification, array $data)
     {
-        $this->adminList->each(function (StoreService $storeService) use ($notification, $data) {
-            $openid = $this->getOpenid($storeService->uid);
+        static::getStoreServiceList()->each(function (StoreService $storeService) use ($notification, $data) {
+            $openid = static::getOpenid($storeService->uid);
             if ($openid) {
                 $templateId = $notification->wechat_tempid;
                 $link = $notification->wechat_link ?: null;
@@ -138,7 +120,7 @@ class WechatTemplateService
      * @param int $uid 用户 UID
      * @return string
      */
-    protected function getOpenid(int $uid): string
+    protected static function getOpenid(int $uid): string
     {
         $user = User::findOrEmpty($uid);
         if ($user->isEmpty() || $user->is_del) {
@@ -148,11 +130,24 @@ class WechatTemplateService
     }
 
     /**
+     * 获取客服列表
+     * @return Collection|StoreService[]
+     */
+    protected static function getStoreServiceList(): Collection
+    {
+        try {
+            return StoreService::where(['status' => 1, 'notify' => 1])->field(['nickname', 'phone', 'uid', 'customer'])->select();
+        } catch (Throwable $e) {
+            throw new RuntimeException($e->getMessage());
+        }
+    }
+
+    /**
      * 获取通知模板
      * @param string $mark 标记
      * @return SystemNotification|null
      */
-    protected function getSystemNotification(string $mark): ?SystemNotification
+    protected static function getSystemNotification(string $mark): ?SystemNotification
     {
         $notification = SystemNotification::where('mark', $mark)->findOrEmpty();
         if ($notification->isEmpty()) {

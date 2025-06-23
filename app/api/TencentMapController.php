@@ -24,8 +24,13 @@ class TencentMapController
     {
         $latitude = $request->param('latitude');
         $longitude = $request->param('longitude');
+        $key = LbsTencentHelper::getIpKey();
+        if (empty($key)) {
+            return response_json()->fail('请先在：系统设置->地图配置，配置地图KEY');
+        }
+
         $parameters = new Location2AddressParameters(
-            LbsTencentHelper::getIpKey(),
+            $key,
             $latitude,
             $longitude
         );

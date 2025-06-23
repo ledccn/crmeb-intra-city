@@ -62,8 +62,7 @@ class OrderController
         $storeOrder->save();
 
         // 提醒客服
-        $wechatTemplateService = new WechatTemplateService();
-        $wechatTemplateService->sendAdminOrderAudit($storeOrder);
+        WechatTemplateService::sendAdminOrderAudit($storeOrder);
 
         return response_json()->success('提交成功，请耐心等待审核或联系客服加快处理');
     }
@@ -94,8 +93,7 @@ class OrderController
         $service->validateExpectedFinishedTime($expected_finished_start_time, $expected_finished_end_time);
 
         // 提醒客服
-        $wechatTemplateService = new WechatTemplateService();
-        $wechatTemplateService->sendAdminOrderAudit($storeOrder);
+        WechatTemplateService::sendAdminOrderAudit($storeOrder);
 
         return response_json()->success('提交成功，请耐心等待审核或联系客服加快处理');
     }

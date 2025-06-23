@@ -17,6 +17,11 @@ class OrderChangeService
     use HasStoreOrder;
 
     /**
+     * 允许变更的字段
+     */
+    protected const allowChangeFields = ['expected_finished_time', 'expected_finished_start_time', 'expected_finished_end_time'];
+
+    /**
      * 构造函数
      * @param StoreOrder $storeOrder
      */
@@ -53,8 +58,7 @@ class OrderChangeService
         $storeOrder->db()->transaction(function () use ($storeOrder, $cacheData, $state) {
             if ($state) {
                 // 允许修改的字段
-                $fields = ['expected_finished_time', 'expected_finished_start_time', 'expected_finished_end_time'];
-                foreach ($fields as $field) {
+                foreach (self::allowChangeFields as $field) {
                     if (!empty($cacheData[$field])) {
                         $storeOrder->{$field} = $cacheData[$field];
                     }

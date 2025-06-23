@@ -28,12 +28,13 @@ class OrderObserver implements SplObserver
         $notify = $subject->getStatus();
         $storeOrder = $subject->getStoreOrder();
 
+        $desc = $notify->statusDesc === $notify->subStatusDesc ? $notify->statusDesc : $notify->statusDesc . '(' . $notify->subStatusDesc . ')';
         // 记录订单变更日志
         StoreOrderStatus::create([
             'oid' => $storeOrder->id,
             'change_type' => OrderChangeTypeEnums::CITY_NOTIFY_CALLBACK,
             'change_time' => time(),
-            'change_message' => '闪送 订单状态变更：【' . $notify->statusDesc . '(' . $notify->subStatusDesc . ')】',
+            'change_message' => '闪送 订单状态变更：【' . $desc . '】',
         ]);
 
         // 更新订单状态

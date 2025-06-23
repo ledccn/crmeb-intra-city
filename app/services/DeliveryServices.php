@@ -75,8 +75,7 @@ class DeliveryServices
         $storeOrder->save();
 
         // 提醒客服
-        $wechatTemplateService = new WechatTemplateService();
-        $wechatTemplateService->sendAdminOrderException($storeOrder);
+        WechatTemplateService::sendAdminOrderException($storeOrder);
         return true;
     }
 
