@@ -400,6 +400,7 @@ class ShanSongService
     public function orderInfo(StoreOrder $storeOrder): array
     {
         $data = $this->merchant->orderInfo($storeOrder->wechat_trans_order_id, $storeOrder->order_id);
+        $data['issOrderNo'] = $storeOrder->wechat_trans_order_id ?: '';
         // 闪送员信息
         $courier = $data['courier'] ?? [];
         if (!empty($courier)) {

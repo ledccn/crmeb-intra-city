@@ -28,7 +28,12 @@ class OrderObserver implements SplObserver
         $notify = $subject->getStatus();
         $storeOrder = $subject->getStoreOrder();
 
-        $desc = $notify->statusDesc === $notify->subStatusDesc ? $notify->statusDesc : $notify->statusDesc . '(' . $notify->subStatusDesc . ')';
+        if ($notify->subStatusDesc) {
+            $desc = $notify->statusDesc === $notify->subStatusDesc ? $notify->statusDesc : $notify->statusDesc . '(' . $notify->subStatusDesc . ')';
+        } else {
+            $desc = $notify->statusDesc;
+        }
+
         // 记录订单变更日志
         StoreOrderStatus::create([
             'oid' => $storeOrder->id,
