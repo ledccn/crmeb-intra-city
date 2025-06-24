@@ -71,7 +71,7 @@ class WechatTemplateService
             'time4' => date('Y-m-d H:i:s', $storeOrder->add_time),
             'time6' => date('Y-m-d H:i:s'),
             //'const5' => $reason,
-        ]);
+        ], ['order_id' => $storeOrder->order_id]);
     }
 
     /**
@@ -92,22 +92,27 @@ class WechatTemplateService
             'character_string1' => $storeOrder->order_id,
             'amount6' => bcadd((string)$storeOrder->total_price, '0', 2),
             'time5' => date('Y-m-d'),
-        ]);
+        ], ['order_id' => $storeOrder->order_id]);
     }
 
     /**
      * 发送模板消息
      * @param SystemNotification $notification
      * @param array $data
+     * @param array $templatePagePathParams 模板跳转页面参数
      * @return void
      */
-    public static function sendTemplate(SystemNotification $notification, array $data)
+    public static function sendTemplate(SystemNotification $notification, array $data, array $templatePagePathParams = [])
     {
-        static::getStoreServiceList()->each(function (StoreService $storeService) use ($notification, $data) {
+        static::getStoreServiceList()->each(function (StoreService $storeService) use ($notification, $data, $templatePagePathParams) {
             $openid = static::getOpenid($storeService->uid);
             if ($openid) {
                 $templateId = $notification->wechat_tempid;
                 $link = $notification->wechat_link ?: null;
+                if ($link && $templatePagePathParams) {
+                    $keys = array_map(fn($key) => '{' . $key . '}', array_keys($templatePagePathParams));
+                    $link = str_replace($keys, array_values($templatePagePathParams), $link);
+                }
                 $wechat_to_routine = $notification->wechat_to_routine;
                 //放入队列执行
                 TemplateJob::dispatch('doJob', ['wechat', $openid, $templateId, $data, $link, null, $wechat_to_routine]);
