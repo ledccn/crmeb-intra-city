@@ -40,11 +40,13 @@ Route::group('intra-city-admin', function () {
         // 统计
         Route::get('statistics', implode('@', [OrderController::class, 'statistics']));
         // 获取用户地址
-        Route::get('user_address/:address_id', implode('@', [OrderController::class, 'userAddress']));
+        Route::get('user_address/:order_change_address', implode('@', [OrderController::class, 'userAddress']));
         // 获取变更期望送达时间缓存
         Route::get('change_expected_finished_time_cache/:id', implode('@', [OrderController::class, 'getChangeExpectedFinishedTimeCache']));
         // 查询即将超时的待发货订单
         Route::get('pending', implode('@', [OrderController::class, 'pending']));
+        // 获取补差价变更地址订单列表
+        Route::get('get_order_address_history_list/:oid', implode('@', [OrderController::class, 'getOrderAddressChangeHistoryList']));
     });
 
     // 同城配送加价策略

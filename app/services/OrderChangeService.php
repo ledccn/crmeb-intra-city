@@ -10,7 +10,7 @@ use think\exception\ValidateException;
 use think\facade\Cache;
 
 /**
- * 订单变更服务
+ * 订单变更服务（变更期望送达时间）
  */
 class OrderChangeService
 {

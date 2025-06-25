@@ -56,6 +56,12 @@ Route::group('intra_city_api', function () {
         Route::post('change_order_address/:id', implode('@', [OrderController::class, 'changeOrderAddress']));
         // 变更订单期望送达时间
         Route::post('change_expected_finished_time/:id', implode('@', [OrderController::class, 'changeExpectedFinishedTime']));
+        // 生成补差价订单的支付参数
+        Route::post('pay_change_order_address/:order_number', implode('@', [OrderController::class, 'payChangeOrderAddress']));
+        // 取消（自动退款）补差价订单
+        Route::post('cancel_change_order_address/:order_number', implode('@', [OrderController::class, 'cancelChangeOrderAddress']));
+        // 获取补差价变更地址订单列表
+        Route::get('get_order_address_history_list/:oid', implode('@', [OrderController::class, 'getOrderAddressChangeHistoryList']));
     });
 
     // 闪送相关

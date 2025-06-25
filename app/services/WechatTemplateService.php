@@ -77,9 +77,10 @@ class WechatTemplateService
     /**
      * 配送订单待审核时通知客服
      * @param StoreOrder $storeOrder
+     * @param string $action
      * @return void
      */
-    public static function sendAdminOrderAudit(StoreOrder $storeOrder)
+    public static function sendAdminOrderAudit(StoreOrder $storeOrder, string $action)
     {
         $notification = static::getSystemNotification(NotificationTemplateEnums::ADMIN_ORDER_AUDIT);
         if (!$notification) {
@@ -92,7 +93,7 @@ class WechatTemplateService
             'character_string1' => $storeOrder->order_id,
             'amount6' => bcadd((string)$storeOrder->total_price, '0', 2),
             'time5' => date('Y-m-d'),
-        ], ['order_id' => $storeOrder->order_id]);
+        ], ['order_id' => $storeOrder->order_id, 'action' => $action]);
     }
 
     /**

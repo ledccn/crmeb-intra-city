@@ -97,6 +97,10 @@ class ShanSongController
             'id/d',
             ['params/a', []],
         ], true);
+        if (!$id) {
+            return response_json()->fail('订单ID不能为空');
+        }
+
         $storeOrder = $this->getStoreOrder($id);
 
         $result = $this->services->orderCalculate(

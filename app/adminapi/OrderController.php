@@ -3,11 +3,11 @@
 namespace Ledc\CrmebIntraCity\adminapi;
 
 use app\model\order\StoreOrder;
-use app\model\user\UserAddress;
 use app\Request;
 use Ledc\CrmebIntraCity\dao\OrderDao;
 use Ledc\CrmebIntraCity\enums\TransOrderStatusEnums;
 use Ledc\CrmebIntraCity\locker\OrderLocker;
+use Ledc\CrmebIntraCity\model\EbStoreOrderChangeAddress;
 use Ledc\CrmebIntraCity\services\OrderAddressService;
 use Ledc\CrmebIntraCity\services\OrderChangeService;
 use think\db\exception\DataNotFoundException;
@@ -37,7 +37,7 @@ class OrderController
 
     /**
      * 审核变更地址
-     * @param int $id
+     * @param int $id 订单表主键
      * @param Request $request
      * @return Response
      * @throws DataNotFoundException
@@ -45,10 +45,11 @@ class OrderController
      */
     public function auditChangeAddress(int $id, Request $request): Response
     {
-        [$state, $reason, $force] = $request->postMore([
+        [$state, $reason, $force, $reprint] = $request->postMore([
             ['state/b', false],
             ['reason/s', ''],
             ['force/b', false],
+            ['reprint/b', true],
         ], true);
 
         $storeOrder = $this->getStoreOrder($id);
@@ -61,14 +62,14 @@ class OrderController
         }
 
         $service = new OrderAddressService($storeOrder);
-        $service->auditChangeAddress($state, $reason, $force);
+        $service->auditChangeAddress($state, $reason, $force, $reprint);
 
         return response_json()->success();
     }
 
     /**
      * 审核变更期望送达时间
-     * @param int $id
+     * @param int $id 订单表主键
      * @param Request $request
      * @return Response
      * @throws DataNotFoundException
@@ -134,21 +135,22 @@ class OrderController
 
     /**
      * 获取用户地址
-     * @param int $address_id 用户地址ID
+     * @param int $order_change_address 变更地址订单表的主键
      * @return Response
      */
-    public function userAddress(int $address_id): Response
+    public function userAddress(int $order_change_address): Response
     {
-        $userAddress = UserAddress::findOrEmpty($address_id);
-        if ($userAddress->isEmpty()) {
+        /** @var EbStoreOrderChangeAddress $orderChangeAddress */
+        $orderChangeAddress = EbStoreOrderChangeAddress::findOrEmpty($order_change_address);
+        if ($orderChangeAddress->isEmpty()) {
             return response_json()->fail('用户地址不存在');
         }
-        return response_json()->success('ok', $userAddress->toArray());
+        return response_json()->success('ok', json_decode($orderChangeAddress->change_user_address_object, true));
     }
 
     /**
      * 获取变更期望送达时间缓存
-     * @param int $id
+     * @param int $id 订单表主键
      * @param Request $request
      * @return Response
      * @throws DataNotFoundException
@@ -159,5 +161,24 @@ class OrderController
         $storeOrder = $this->getStoreOrder($id);
         $service = new OrderChangeService($storeOrder);
         return response_json()->success('ok', $service->getCache());
+    }
+
+    /**
+     * 获取补差价变更地址订单列表
+     * @param int $oid 订单表主键
+     * @param Request $request 请求对象
+     * @return Response
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
+     */
+    public function getOrderAddressChangeHistoryList(int $oid, Request $request): Response
+    {
+        $query = EbStoreOrderChangeAddress::queryByOid($oid);
+
+        return response_json()->success('ok', [
+            'count' => $query->count(),
+            'list' => $query->select()->toArray(),
+        ]);
     }
 }

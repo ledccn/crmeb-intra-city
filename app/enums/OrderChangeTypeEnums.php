@@ -14,11 +14,15 @@ class OrderChangeTypeEnums
     /**
      * 同城配送订单状态回调
      */
-    public const CITY_NOTIFY_CALLBACK  = 'city_notify_callback';
+    public const CITY_NOTIFY_CALLBACK = 'city_notify_callback';
     /**
      * 订单变更类型：变更地址
      */
     public const CHANGE_ADDRESS = 'change_address';
+    /**
+     * 订单变更类型：变更地址退款（退补差价运费）
+     */
+    public const CHANGE_ADDRESS_REFUND = 'change_address_refund';
     /**
      * 订单变更类型：变更期望送达时间
      */

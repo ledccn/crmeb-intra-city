@@ -7,7 +7,7 @@ use app\model\user\UserAddress;
 /**
  * 订单表
  * @property string|UserAddress $user_address_object 用户地址表对象
- * @property integer $change_user_address_id 待变更的用户收货地址ID
+ * @property integer $change_user_address_id 变更地址订单表的主键（eb_store_order_change_address表主键）
  * @property int|bool $change_expected_finished_audit 待变更期望送达审核状态
  * @property integer $expected_finished_time 预期送达时间
  * @property string $expected_finished_start_time 预期送达开始时间

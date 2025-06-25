@@ -202,7 +202,16 @@ class ShanSongService
 
         $cargo_weight = 0;
         array_map(function ($item) use (&$cargo_weight) {
-            $weight = $item['attrInfo']['weight'] ?? '0';
+            if (!empty($item['attrInfo'])) {
+                $weight = $item['attrInfo']['weight'];
+            } else {
+                if (isset($item['cart_info']) && is_string($item['cart_info'])) {
+                    $cart_row = json_decode($item['cart_info'], true);
+                    $weight = $cart_row['attrInfo']['weight'] ?? '0';
+                } else {
+                    $weight = '0';
+                }
+            }
             $cargo_weight = bcadd($cargo_weight, bcmul($item['cart_num'], $weight));
         }, $cartInfo);
         $cargo_type = WechatIntraCityService::getCargoType($cartInfo);

@@ -42,6 +42,8 @@ class Command extends \think\console\Command
             'InsertSystemNotificationException' => dirname(__DIR__) . '/migrations/08.php',
             // 地理位置腾讯地图 KEY
             'InsertSystemConfigLbs' => dirname(__DIR__) . '/migrations/09.php',
+            // 创建变更地址订单表
+            'CreateChangeAddressOrder' => dirname(__DIR__) . '/migrations/10.php',
         ]);
     }
 

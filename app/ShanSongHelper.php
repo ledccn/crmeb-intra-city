@@ -27,6 +27,15 @@ class ShanSongHelper
     }
 
     /**
+     * 获取商家承担的运费金额
+     * @return float
+     */
+    public static function getSellerFreightLimit(): float
+    {
+        return sys_config(Config::CONFIG_PREFIX . 'seller_freight_limit', 10);
+    }
+
+    /**
      * 获取配置
      * @return array
      */

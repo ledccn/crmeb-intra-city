@@ -5,16 +5,22 @@ namespace Ledc\CrmebIntraCity\services;
 use app\model\order\StoreOrder;
 use app\model\order\StoreOrderStatus;
 use app\model\user\UserAddress;
+use app\services\order\StoreOrderServices;
 use ErrorException;
 use InvalidArgumentException;
 use Ledc\CrmebIntraCity\enums\OrderChangeTypeEnums;
+use Ledc\CrmebIntraCity\model\EbStoreOrderChangeAddress;
 use Ledc\CrmebIntraCity\parameters\HasStoreOrder;
 use Ledc\CrmebIntraCity\ServiceTransEnums;
 use Ledc\CrmebIntraCity\WechatIntraCityHelper;
+use think\db\exception\DataNotFoundException;
+use think\db\exception\DbException;
+use think\db\exception\ModelNotFoundException;
+use think\exception\ValidateException;
 use think\facade\Log;
 
 /**
- * 订单服务
+ * 订单地址服务（变更收货信息）
  */
 class OrderAddressService
 {
@@ -24,7 +30,7 @@ class OrderAddressService
      * 构造函数
      * @param StoreOrder $storeOrder
      */
-    public function __construct(StoreOrder $storeOrder)
+    final public function __construct(StoreOrder $storeOrder)
     {
         $this->setStoreOrder($storeOrder);
     }
@@ -34,11 +40,28 @@ class OrderAddressService
      * @param bool $state 审核状态：true 通过，false 拒绝
      * @param string $reason 审核原因
      * @param bool $force 是否强制操作（审核状态true时，取消订单可能产生费用，需传true）
+     * @param bool $reprint 审核通过、是否重新打印
      * @return bool
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
      */
-    public function auditChangeAddress(bool $state, string $reason, bool $force): bool
+    final public function auditChangeAddress(bool $state, string $reason, bool $force, bool $reprint = false): bool
     {
         $storeOrder = $this->getStoreOrder();
+        $change_user_address_id = $storeOrder->change_user_address_id;
+        if (!$change_user_address_id) {
+            throw new ValidateException('用户已取消申请，无需审核');
+        }
+        $orderChangeAddress = EbStoreOrderChangeAddress::findOrFail($change_user_address_id);
+        if ($state) {
+            if (!$orderChangeAddress->isPaid()) {
+                throw new ValidateException('请等待用户支付成功后再审核');
+            }
+            if ($orderChangeAddress->isRefunded()) {
+                throw new ValidateException('用户已申请退款，无需审核');
+            }
+        }
+
         // 记录订单变更日志
         StoreOrderStatus::create([
             'oid' => $storeOrder->id,
@@ -48,14 +71,15 @@ class OrderAddressService
         ]);
 
         // 更新订单状态
-        return $storeOrder->db()->transaction(function () use ($state, $reason, $force, $storeOrder) {
+        return $storeOrder->db()->transaction(function () use ($state, $reason, $force, $storeOrder, $orderChangeAddress, $reprint) {
             if ($state) {
-                $userAddress = UserAddress::findOrFail($storeOrder->change_user_address_id);
+                $userAddress = new UserAddress(json_decode($orderChangeAddress->change_user_address_object, true));
                 $change_data = $this->extractUpdatingOrderData($userAddress);
                 // 判断地址与电话是否一致
                 if ($this->isSameAddress($change_data)) {
                     $storeOrder->change_user_address_id = 0;
                     $storeOrder->save();
+                    $orderChangeAddress->setLocked();
                     return true;
                 }
 
@@ -64,26 +88,57 @@ class OrderAddressService
                     $storeOrder->change_user_address_id = 0;
                     $storeOrder->user_address_object = json_encode($userAddress, JSON_UNESCAPED_UNICODE);
                     $storeOrder->save($change_data);
-                    return true;
+                } else {
+                    switch ($storeOrder->wechat_service_trans_id) {
+                        case ServiceTransEnums::TRANS_SHANSONG:
+                            $this->modifyShansongAddress($change_data, $userAddress, $force);
+                            break;
+                        case ServiceTransEnums::TRANS_SFTC:
+                        case ServiceTransEnums::TRANS_DADA:
+                        default:
+                            $this->modifyWechatIntraCityAddress($change_data, $userAddress, $force, $reason);
+                            break;
+                    }
                 }
 
-                switch ($storeOrder->wechat_service_trans_id) {
-                    case ServiceTransEnums::TRANS_SHANSONG:
-                        $this->modifyShansongAddress($change_data, $userAddress, $force);
-                        return true;
-                    case ServiceTransEnums::TRANS_SFTC:
-                    case ServiceTransEnums::TRANS_DADA:
-                    default:
-                        $this->modifyWechatIntraCityAddress($change_data, $userAddress, $force, $reason);
-                        return true;
-                }
+                $orderChangeAddress->setLocked();
+                // 重新打印票据
+                $this->reprintOrderTicket($reprint);
             } else {
                 // 拒绝变更地址
                 $storeOrder->change_user_address_id = 0;
                 $storeOrder->save();
-                return true;
+
+                // 退款
+                $refund_reason = '审核拒绝变更收货信息' . ($reason ? '：' . $reason : '');
+                if ($orderChangeAddress->canRefund()) {
+                    $changeAddressService = new StoreOrderChangeAddressService($orderChangeAddress);
+                    $changeAddressService->refund($refund_reason);
+                } else {
+                    $orderChangeAddress->refund_reason = $refund_reason;
+                    $orderChangeAddress->setLocked();
+                }
             }
+
+            return true;
         });
+    }
+
+    /**
+     * 重新打印订单票据
+     * @param bool $reprint 是否重新打印
+     * @return void
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     */
+    final protected function reprintOrderTicket(bool $reprint = false): void
+    {
+        if ($reprint) {
+            /** @var StoreOrderServices $storeOrderService */
+            $storeOrderService = app()->make(StoreOrderServices::class);
+            $storeOrderService->orderPrintTicket($this->getStoreOrder()->id);
+        }
     }
 
     /**
@@ -95,7 +150,7 @@ class OrderAddressService
      * @return void
      * @throws ErrorException
      */
-    protected function modifyWechatIntraCityAddress(array $change_data, UserAddress $userAddress, bool $force, string $reason)
+    final protected function modifyWechatIntraCityAddress(array $change_data, UserAddress $userAddress, bool $force, string $reason)
     {
         if (!$force) {
             throw new InvalidArgumentException('取消微信同城配送订单时，需要传入强制操作参数');
@@ -115,7 +170,7 @@ class OrderAddressService
      * @param bool $force
      * @return void
      */
-    protected function modifyShansongAddress(array $change_data, UserAddress $userAddress, bool $force)
+    final protected function modifyShansongAddress(array $change_data, UserAddress $userAddress, bool $force)
     {
         $storeOrder = $this->getStoreOrder();
         $shansongService = new ShansongService();
@@ -139,7 +194,7 @@ class OrderAddressService
      * @param array|UserAddress $addressInfo
      * @return string
      */
-    public static function implodeFullUserAddress($addressInfo): string
+    final public static function implodeFullUserAddress($addressInfo): string
     {
         return $addressInfo['map_address'] . ' ' . $addressInfo['map_name'] . ' ' . $addressInfo['detail'];
     }
@@ -149,7 +204,7 @@ class OrderAddressService
      * @param UserAddress $userAddress
      * @return array
      */
-    public function extractUpdatingOrderData(UserAddress $userAddress): array
+    final public function extractUpdatingOrderData(UserAddress $userAddress): array
     {
         return [
             'real_name' => $userAddress->real_name,
@@ -179,7 +234,7 @@ class OrderAddressService
      * @param string $change_user_phone
      * @return bool
      */
-    public function isSamePhone(string $user_phone, string $change_user_phone): bool
+    final public function isSamePhone(string $user_phone, string $change_user_phone): bool
     {
         return $user_phone === $change_user_phone;
     }
@@ -190,7 +245,7 @@ class OrderAddressService
      * @param array $except 不参与对比的key
      * @return bool
      */
-    public function isSameAddress(array $change_data, array $except = []): bool
+    final public function isSameAddress(array $change_data, array $except = []): bool
     {
         $storeOrder = $this->getStoreOrder();
         foreach ($change_data as $key => $value) {
