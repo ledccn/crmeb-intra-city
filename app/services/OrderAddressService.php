@@ -42,8 +42,6 @@ class OrderAddressService
      * @param bool $force 是否强制操作（审核状态true时，取消订单可能产生费用，需传true）
      * @param bool $reprint 审核通过、是否重新打印
      * @return bool
-     * @throws DataNotFoundException
-     * @throws ModelNotFoundException
      */
     final public function auditChangeAddress(bool $state, string $reason, bool $force, bool $reprint = false): bool
     {
@@ -52,7 +50,13 @@ class OrderAddressService
         if (!$change_user_address_id) {
             throw new ValidateException('用户已取消申请，无需审核');
         }
-        $orderChangeAddress = EbStoreOrderChangeAddress::findOrFail($change_user_address_id);
+        $orderChangeAddress = EbStoreOrderChangeAddress::findOrEmpty($change_user_address_id);
+        if ($orderChangeAddress->isEmpty()) {
+            $storeOrder->change_user_address_id = 0;
+            $storeOrder->save();
+            throw new ValidateException('订单变更信息不存在');
+        }
+
         if ($state) {
             if (!$orderChangeAddress->isPaid()) {
                 throw new ValidateException('请等待用户支付成功后再审核');

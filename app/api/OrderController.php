@@ -74,7 +74,7 @@ class OrderController
         }
 
         if ($orderChangeAddress->isLocked()) {
-            return response_json()->fail('订单已锁定，不支持取消');
+            return response_json()->fail('订单已锁定，禁止取消');
         }
 
         $locker = OrderLocker::changeAddress($orderChangeAddress->oid);

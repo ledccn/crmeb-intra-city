@@ -5,7 +5,9 @@ namespace Ledc\CrmebIntraCity\adminapi;
 use Ledc\CrmebIntraCity\enums\StoreOrderRefundStatusEnums;
 use Ledc\CrmebIntraCity\enums\StoreOrderStatusEnums;
 use Ledc\CrmebIntraCity\ServiceTransEnums;
+use Ledc\IntraCity\Enums\CargoTypeEnums;
 use Ledc\IntraCity\Enums\OrderStatusEnums as WechatOrderStatusEnums;
+use Ledc\ShanSong\Enums\GoodTypeEnums;
 use Ledc\ShanSong\Enums\OrderStatusEnums as ShanSongOrderStatusEnums;
 use think\Response;
 
@@ -62,5 +64,23 @@ class EnumsController
             ],
         ];
         return response_json()->success('success', $data);
+    }
+
+    /**
+     * 物品类型枚举（微信同城配送物品类型）
+     * @return Response
+     */
+    public function CargoType(): Response
+    {
+        return response_json()->success('success', CargoTypeEnums::list());
+    }
+
+    /**
+     * 闪送物品类型标签枚举
+     * @return Response
+     */
+    public function ShanSongGoodType(): Response
+    {
+        return response_json()->success('success', GoodTypeEnums::list());
     }
 }

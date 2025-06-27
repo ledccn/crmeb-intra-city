@@ -5,6 +5,7 @@ namespace Ledc\CrmebIntraCity\services;
 use app\model\order\StoreOrder;
 use app\model\order\StoreOrderStatus;
 use Ledc\CrmebIntraCity\enums\OrderChangeTypeEnums;
+use Ledc\CrmebIntraCity\enums\TransOrderStatusEnums;
 use Ledc\CrmebIntraCity\parameters\HasStoreOrder;
 use think\exception\ValidateException;
 use think\facade\Cache;
@@ -93,7 +94,7 @@ class OrderChangeService
         }
 
         $storeOrder = $this->getStoreOrder();
-        if ($this->getStoreOrder()->wechat_processed) {
+        if (!TransOrderStatusEnums::isAllowChangeAddressOrExpectedFinishedTime($storeOrder->trans_order_status)) {
             throw new ValidateException('订单已呼叫配送员，请联系客服');
         }
 

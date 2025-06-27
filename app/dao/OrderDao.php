@@ -15,6 +15,11 @@ use think\db\Query;
 class OrderDao
 {
     /**
+     * 可排序的字段
+     */
+    const ORDER_FIELD_MAP = ['add_time', 'pay_time', 'expected_finished_time', 'trans_order_status'];
+
+    /**
      * 查询订单
      * - 默认查询180天前至今已支付且未退款且未取消的订单
      * @param int $days_ago 从X天前开始查询

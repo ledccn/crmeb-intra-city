@@ -11,6 +11,7 @@ use crmeb\exceptions\ApiException;
 use crmeb\services\pay\Pay;
 use crmeb\utils\Str;
 use Ledc\CrmebIntraCity\enums\OrderChangeTypeEnums;
+use Ledc\CrmebIntraCity\enums\TransOrderStatusEnums;
 use Ledc\CrmebIntraCity\model\EbStoreOrderChangeAddress;
 use think\exception\ValidateException;
 use think\facade\Event;
@@ -78,6 +79,20 @@ class StoreOrderChangeAddressService
         if ($orderChangeAddress->pay_price <= 0) {
             throw new ApiException(410274);
         }
+        $storeOrder = $orderChangeAddress->getStoreOrder();
+        if (!$storeOrder) {
+            $orderChangeAddress->setLocked();
+            throw new ValidateException('订单不存在');
+        }
+        if ($storeOrder->change_user_address_id !== $orderChangeAddress->id) {
+            $orderChangeAddress->setLocked();
+            throw new ValidateException('订单已过期');
+        }
+        if (!TransOrderStatusEnums::isAllowChangeAddressOrExpectedFinishedTime($storeOrder->trans_order_status)) {
+            $orderChangeAddress->setLocked();
+            throw new ValidateException('订单状态不允许支付');
+        }
+
         // 指定为微信支付
         $payType = PayServices::WEIXIN_PAY;
         $orderChangeAddress->pay_type = $payType;
@@ -170,8 +185,7 @@ class StoreOrderChangeAddressService
             $orderChangeAddress->refund_status = 1;
             $orderChangeAddress->refund_price = $orderChangeAddress->pay_price;
             $orderChangeAddress->refund_reason = $refund_reason;
-            $orderChangeAddress->refund_locked = 1;
-            $orderChangeAddress->save();
+            $orderChangeAddress->setLocked();
 
             // 记录订单变更日志
             StoreOrderStatus::create([

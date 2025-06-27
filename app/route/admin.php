@@ -30,6 +30,10 @@ Route::group('intra-city-admin', function () {
     Route::get('store_order_status', implode('@', [EnumsController::class, 'StoreOrderStatus']));
     // 订单退款状态枚举（CRMEB订单退款状态）
     Route::get('store_order_refund_status', implode('@', [EnumsController::class, 'StoreOrderRefundStatus']));
+    // 物品类型枚举（微信同城配送物品类型）
+    Route::get('cargo_type', implode('@', [EnumsController::class, 'CargoType']));
+    // 闪送物品类型标签枚举
+    Route::get('good_type', implode('@', [EnumsController::class, 'ShanSongGoodType']));
 
     // 订单管理
     Route::group('store_order', function () {

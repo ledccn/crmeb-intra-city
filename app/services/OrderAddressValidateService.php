@@ -4,6 +4,7 @@ namespace Ledc\CrmebIntraCity\services;
 
 use app\model\user\UserAddress;
 use app\services\order\StoreOrderCartInfoServices;
+use Ledc\CrmebIntraCity\enums\TransOrderStatusEnums;
 use Ledc\CrmebIntraCity\model\EbStoreOrderChangeAddress;
 use Ledc\CrmebIntraCity\ServiceTransEnums;
 use Ledc\CrmebIntraCity\ShanSongHelper;
@@ -32,7 +33,7 @@ class OrderAddressValidateService extends OrderAddressService
             throw new ValidateException('收货地址与当前订单一致');
         }
 
-        if ($storeOrder->wechat_processed) {
+        if (!TransOrderStatusEnums::isAllowChangeAddressOrExpectedFinishedTime($storeOrder->trans_order_status)) {
             throw new ValidateException('订单已呼叫配送员，请联系客服');
         } else {
             // 预估配送费

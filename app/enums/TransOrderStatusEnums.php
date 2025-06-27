@@ -81,4 +81,17 @@ class TransOrderStatusEnums
         }
         return $rs;
     }
+
+    /**
+     * 允许变更订单的收货地址或期望送达时间
+     * @param int $value
+     * @return bool
+     */
+    public static function isAllowChangeAddressOrExpectedFinishedTime(int $value): bool
+    {
+        return in_array($value, [
+            self::DEFAULT,
+            self::Cancelled,
+        ], true);
+    }
 }

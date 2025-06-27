@@ -4,6 +4,7 @@ namespace Ledc\CrmebIntraCity\parameters;
 
 use app\model\order\StoreOrder;
 use InvalidArgumentException;
+use Ledc\CrmebIntraCity\enums\TransOrderStatusEnums;
 
 /**
  * 订单数据模型
