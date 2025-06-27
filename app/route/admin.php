@@ -11,6 +11,7 @@ use Ledc\CrmebIntraCity\adminapi\PricingIncreaseStrategyController;
 use Ledc\CrmebIntraCity\adminapi\ShanSongController;
 use Ledc\CrmebIntraCity\adminapi\WechatController;
 use think\facade\Route;
+use think\Response;
 
 /**
  * 同城配送 后台管理相关路由
@@ -107,6 +108,15 @@ Route::group('intra-city-admin', function () {
     Route::group('wechat', function () {
         // 查询配送单
         Route::get('query_order/:id', implode('@', [WechatController::class, 'queryOrder']));
+    });
+    Route::miss(function () {
+        if (app()->request->isOptions()) {
+            $header = \think\Facade\Config::get('cookie.header');
+            unset($header['Access-Control-Allow-Credentials']);
+            return Response::create('ok')->code(200)->header($header);
+        } else {
+            return Response::create()->code(404);
+        }
     });
 })->middleware([
     AllowOriginMiddleware::class,

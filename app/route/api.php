@@ -12,6 +12,7 @@ use Ledc\ThinkModelTrait\Contracts\LockerParameters;
 use Ledc\ThinkModelTrait\Middleware\LimiterMiddleware;
 use Ledc\ThinkModelTrait\Middleware\LockerMiddleware;
 use think\facade\Route;
+use think\Response;
 
 /**
  * 测试接口
@@ -76,6 +77,16 @@ Route::group('intra_city_api', function () {
     Route::group('tencent_map', function () {
         // 逆地址解析（坐标位置描述）
         Route::any('location2address', implode('@', [TencentMapController::class, 'location2address']))->middleware(LimiterMiddleware::class, ['limit' => 3, 'window' => 5]);
+    });
+
+    Route::miss(function () {
+        if (app()->request->isOptions()) {
+            $header = \think\Facade\Config::get('cookie.header');
+            unset($header['Access-Control-Allow-Credentials']);
+            return Response::create('ok')->code(200)->header($header);
+        } else {
+            return Response::create()->code(404);
+        }
     });
 })->middleware(AllowOriginMiddleware::class)
     ->middleware(StationOpenMiddleware::class)
