@@ -3,6 +3,7 @@
 use crmeb\utils\Json;
 use Ledc\CrmebIntraCity\WechatIntraCityHelper;
 use Ledc\IntraCity\ExpressApi;
+use Ledc\ThinkModelTrait\RedisUtils;
 
 if (!function_exists('wechat_express_api')) {
     /**
@@ -23,6 +24,17 @@ if (!function_exists('response_json')) {
     function response_json(): Json
     {
         return app('json');
+    }
+}
+
+if (!function_exists('generate_order_seq')) {
+    /**
+     * 生成订单流水号
+     * @return int
+     */
+    function generate_order_seq(): int
+    {
+        return RedisUtils::incr('wechat_order_seq:' . date('Ymd'), 86400 * 2);
     }
 }
 

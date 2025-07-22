@@ -80,7 +80,8 @@ class ShanSongController
      */
     public function orderInfo(int $id): Response
     {
-        $result = $this->services->orderInfo($this->getStoreOrder($id));
+        $storeOrder = $this->getStoreOrder($id);
+        $result = $this->services->orderInfo($storeOrder->wechat_trans_order_id, $storeOrder->order_id);
         return response_json()->success('ok', $result);
     }
 
@@ -93,7 +94,8 @@ class ShanSongController
      */
     public function courierInfo(int $id): Response
     {
-        $result = $this->services->courierInfo($this->getStoreOrder($id));
+        $storeOrder = $this->getStoreOrder($id);
+        $result = $this->services->courierInfo($storeOrder->wechat_trans_order_id);
         return response_json()->success('ok', $result);
     }
 }

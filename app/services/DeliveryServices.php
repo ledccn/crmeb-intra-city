@@ -39,7 +39,7 @@ class DeliveryServices
             switch ($service_trans_id) {
                 case ServiceTransEnums::TRANS_SHANSONG:
                     $service = new ShanSongService();
-                    $shanSongParameters = ShanSongParameters::make($params)->setStoreOrder($order)->cache();
+                    $shanSongParameters = ShanSongParameters::make($params)->setOrderId($order->order_id)->cache();
                     $rs = $service->orderPlace(
                         $order,
                         $shanSongParameters

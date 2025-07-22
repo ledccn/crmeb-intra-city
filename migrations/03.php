@@ -34,12 +34,15 @@ class UpdateStoreOrderIntraCity extends Migrator
             ->addColumn('wechat_fetch_code', AdapterInterface::PHINX_TYPE_STRING, ['comment' => '同城配送取货码', 'null' => false, 'limit' => 20, 'default' => ''])
             ->addColumn('wechat_distance', AdapterInterface::PHINX_TYPE_INTEGER, ['comment' => '同城配送距离(米)', 'null' => false, 'limit' => MysqlAdapter::INT_REGULAR, 'default' => 0, 'signed' => false])
             ->addColumn('wechat_fee', AdapterInterface::PHINX_TYPE_INTEGER, ['comment' => '同城配送费用(分)', 'null' => false, 'limit' => MysqlAdapter::INT_REGULAR, 'default' => 0, 'signed' => false])
+            ->addColumn(Column::unsignedInteger('trans_order_create_time')->setComment('同城配送运力单创建时间')->setNull(false)->setDefault(0))
+            ->addColumn(Column::unsignedInteger('trans_order_update_time')->setComment('同城配送运力单更新时间')->setNull(false)->setDefault(0))
             ->addIndex('change_user_address_id')
             ->addIndex('change_expected_finished_audit')
             ->addIndex('wechat_wx_store_id')
             ->addIndex('wechat_wx_order_id')
             ->addIndex('wechat_processed')
             ->addIndex('trans_order_status')
+            ->addIndex('trans_order_create_time')
             ->update();
     }
 }

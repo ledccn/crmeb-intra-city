@@ -129,7 +129,7 @@ final class ShanSongParameters extends Parameters
      */
     public function getCacheKey(): string
     {
-        return 'ShanSongParameters_' . $this->getStoreOrder()->id;
+        return 'ShanSongParameters_' . $this->getOrderId();
     }
 
     /**

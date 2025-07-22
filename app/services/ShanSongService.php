@@ -6,6 +6,7 @@ use app\model\order\StoreOrder;
 use app\model\order\StoreOrderStatus;
 use app\model\system\store\SystemStore;
 use app\model\user\UserAddress;
+use app\Request;
 use app\services\order\StoreOrderCartInfoServices;
 use Ledc\CrmebIntraCity\enums\OrderChangeTypeEnums;
 use Ledc\CrmebIntraCity\enums\TransOrderStatusEnums;
@@ -40,6 +41,10 @@ use Throwable;
 class ShanSongService
 {
     /**
+     * 闪送X-Develop请求头
+     */
+    public const X_DEVELOP = 'x-develop';
+    /**
      * 闪送自营商户
      * @var Merchant
      */
@@ -51,6 +56,12 @@ class ShanSongService
     public function __construct()
     {
         $this->merchant = ShanSongHelper::merchant();
+        /** @var Request $request */
+        $request = \request();
+        $isTestEnv = $request->header(self::X_DEVELOP, false) || $request->get(self::X_DEVELOP, false) || $request->post(self::X_DEVELOP, false);
+        if ($isTestEnv) {
+            $this->setTestEnv();
+        }
     }
 
     /**
@@ -403,13 +414,14 @@ class ShanSongService
 
     /**
      * 查询订单详情
-     * @param StoreOrder $storeOrder
+     * @param string $issOrderNo
+     * @param string $thirdOrderNo
      * @return array
      */
-    public function orderInfo(StoreOrder $storeOrder): array
+    public function orderInfo(string $issOrderNo, string $thirdOrderNo): array
     {
-        $data = $this->merchant->orderInfo($storeOrder->wechat_trans_order_id, $storeOrder->order_id);
-        $data['issOrderNo'] = $storeOrder->wechat_trans_order_id ?: '';
+        $data = $this->merchant->orderInfo($issOrderNo, $thirdOrderNo);
+        $data['issOrderNo'] = $issOrderNo;
         // 闪送员信息
         $courier = $data['courier'] ?? [];
         if (!empty($courier)) {
@@ -429,12 +441,12 @@ class ShanSongService
 
     /**
      * 查询闪送员位置信息
-     * @param StoreOrder $storeOrder
+     * @param string $issOrderNo
      * @return array
      */
-    public function courierInfo(StoreOrder $storeOrder): array
+    public function courierInfo(string $issOrderNo): array
     {
-        $data = $this->merchant->courierInfo($storeOrder->wechat_trans_order_id);
+        $data = $this->merchant->courierInfo($issOrderNo);
         $longitude = $data['longitude'] ?? null;
         $latitude = $data['latitude'] ?? null;
         if ($longitude && $latitude) {
@@ -472,23 +484,23 @@ class ShanSongService
 
     /**
      * 订单预取消
-     * @param StoreOrder $storeOrder
+     * @param string $issOrderNo
      * @return array
      */
-    public function preAbortOrder(StoreOrder $storeOrder): array
+    public function preAbortOrder(string $issOrderNo): array
     {
-        return $this->merchant->preAbortOrder($storeOrder->wechat_trans_order_id);
+        return $this->merchant->preAbortOrder($issOrderNo);
     }
 
     /**
      * 订单取消
-     * @param StoreOrder $storeOrder
+     * @param string $issOrderNo
      * @param bool $deductFlag 是否同意扣除余额  true:同意，false:不同意，默认false
      * @return array
      */
-    public function abortOrder(StoreOrder $storeOrder, bool $deductFlag = false): array
+    public function abortOrder(string $issOrderNo, bool $deductFlag = false): array
     {
-        return $this->merchant->abortOrder($storeOrder->wechat_trans_order_id, $deductFlag);
+        return $this->merchant->abortOrder($issOrderNo, $deductFlag);
     }
 
     /**
@@ -591,7 +603,7 @@ class ShanSongService
         /** @var StoreOrder $storeOrder */
         $storeOrder = StoreOrder::where('order_id', '=', $notify->orderNo)->findOrEmpty();
         if ($storeOrder->isEmpty()) {
-            throw new ValidateException('订单不存在');
+            return 200;
         }
         if ($storeOrder->wechat_trans_order_id !== $notify->issOrderNo) {
             throw new ValidateException('闪送订单号校验失败');

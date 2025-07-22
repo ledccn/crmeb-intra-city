@@ -105,7 +105,7 @@ class ShanSongController
 
         $result = $this->services->orderCalculate(
             $storeOrder,
-            ShanSongParameters::make($params)->setStoreOrder($storeOrder)
+            ShanSongParameters::make($params)->setOrderId($storeOrder->order_id)
         );
         return response_json()->success('ok', $result->jsonSerialize());
     }
@@ -129,7 +129,7 @@ class ShanSongController
 
         $storeOrder = $this->getStoreOrder($id);
 
-        $shanSongParameters = ShanSongParameters::make($params)->setStoreOrder($storeOrder)->cache();
+        $shanSongParameters = ShanSongParameters::make($params)->setOrderId($storeOrder->order_id)->cache();
         $result = $this->services->orderPlace(
             $storeOrder,
             $shanSongParameters
@@ -161,7 +161,8 @@ class ShanSongController
      */
     public function orderInfo(int $id): Response
     {
-        $result = $this->services->orderInfo($this->getStoreOrder($id));
+        $storeOrder = $this->getStoreOrder($id);
+        $result = $this->services->orderInfo($storeOrder->wechat_trans_order_id, $storeOrder->order_id);
         return response_json()->success('ok', $result);
     }
 
@@ -175,7 +176,8 @@ class ShanSongController
      */
     public function courierInfo(int $id): Response
     {
-        $result = $this->services->courierInfo($this->getStoreOrder($id));
+        $storeOrder = $this->getStoreOrder($id);
+        $result = $this->services->courierInfo($storeOrder->wechat_trans_order_id);
         return response_json()->success('ok', $result);
     }
 
@@ -218,7 +220,8 @@ class ShanSongController
      */
     public function preAbortOrder(int $id): Response
     {
-        $result = $this->services->preAbortOrder($this->getStoreOrder($id));
+        $storeOrder = $this->getStoreOrder($id);
+        $result = $this->services->preAbortOrder($storeOrder->wechat_trans_order_id);
         return response_json()->success('ok', $result);
     }
 
@@ -234,7 +237,8 @@ class ShanSongController
     {
         $id = $request->post('id');
         $deductFlag = $request->post('deduct_flag', false);
-        $result = $this->services->abortOrder($this->getStoreOrder($id), (bool)$deductFlag);
+        $storeOrder = $this->getStoreOrder($id);
+        $result = $this->services->abortOrder($storeOrder->wechat_trans_order_id, (bool)$deductFlag);
         return response_json()->success('ok', $result);
     }
 

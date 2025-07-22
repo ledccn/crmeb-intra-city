@@ -3,6 +3,7 @@
 namespace Ledc\CrmebIntraCity\services;
 
 use app\model\shipping\SystemCity;
+use Ledc\CrmebIntraCity\parameters\Address2LocationParameters;
 use Ledc\CrmebIntraCity\parameters\Location2AddressParameters;
 use Ledc\ThinkModelTrait\Contracts\Curl;
 use RuntimeException;
@@ -32,6 +33,23 @@ class LbsTencentService
         $curl->setReferer(sys_config('site_url'));
         $curl->get(Location2AddressParameters::BASE_URL, $parameters->toArray());
 
+        return self::parseHttpResponse($curl);
+    }
+
+    /**
+     * 地址转经纬度
+     * - 地址解析（地址转坐标）
+     * - 本接口提供由文字地址到经纬度的转换能力，并同时提供结构化的省市区地址信息。
+     * @link https://lbs.qq.com/service/webService/webServiceGuide/address/Geocoder
+     * @param Address2LocationParameters $parameters
+     * @return array
+     */
+    public static function address2location(Address2LocationParameters $parameters): array
+    {
+        $curl = new Curl();
+        $curl->setTimeout()->setSslVerify();
+        $curl->setReferer(sys_config('site_url'));
+        $curl->get(Address2LocationParameters::BASE_URL, $parameters->toArray());
         return self::parseHttpResponse($curl);
     }
 

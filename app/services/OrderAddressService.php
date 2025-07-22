@@ -185,7 +185,7 @@ class OrderAddressService
             $storeOrder->save();
         } else {
             // 变更地址
-            $result = $shansongService->abortOrder($storeOrder, $force);
+            $result = $shansongService->abortOrder($storeOrder->wechat_trans_order_id, $force);
             $storeOrder->change_user_address_id = 0;
             $storeOrder->user_address_object = json_encode($userAddress, JSON_UNESCAPED_UNICODE);
             $storeOrder->save($change_data);
