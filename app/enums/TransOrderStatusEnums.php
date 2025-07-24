@@ -83,7 +83,7 @@ class TransOrderStatusEnums
     }
 
     /**
-     * 允许变更订单的收货地址或期望送达时间
+     * 判断是否允许变更订单的收货地址或期望送达时间
      * @param int $value
      * @return bool
      */
@@ -92,6 +92,20 @@ class TransOrderStatusEnums
         return in_array($value, [
             self::DEFAULT,
             self::Cancelled,
+        ], true);
+    }
+
+    /**
+     * 判断是否允许取消配送单
+     * @param int $value
+     * @return bool
+     */
+    public static function isAllowCancel(int $value): bool
+    {
+        return in_array($value, [
+            self::Assigned,
+            self::PendingPickup,
+            self::InTransit,
         ], true);
     }
 }

@@ -16,6 +16,10 @@ class OrderChangeTypeEnums
      */
     public const CITY_NOTIFY_CALLBACK = 'city_notify_callback';
     /**
+     * 同城配送订单发货
+     */
+    public const CITY_DELIVERY = 'city_delivery';
+    /**
      * 订单变更类型：变更地址
      */
     public const CHANGE_ADDRESS = 'change_address';
