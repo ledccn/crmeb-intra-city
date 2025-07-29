@@ -279,7 +279,7 @@ class ShanSongService
         $receiver->toMobile = $storeOrder->user_phone;
         if ($storeOrder->paid && $storeOrder->pay_time && $storeOrder->order_seq) {
             $receiver->orderingSourceType = OrderingSourceTypeEnums::INT_1;
-            $receiver->orderingSourceNo = date('md', $storeOrder->pay_time) . str_pad($storeOrder->order_seq, 4, '0', STR_PAD_LEFT);
+            $receiver->orderingSourceNo = get_order_seq($storeOrder->pay_time, $storeOrder->order_seq);
         }
         // 期望送达时间
         if ($storeOrder->expected_finished_start_time && $storeOrder->expected_finished_end_time) {
@@ -323,7 +323,7 @@ class ShanSongService
 
         $receiver->goodType = $shanSongParameters->goodType ?: $good_type;
         $receiver->weight = ceil($cargo_weight) ?: 1;
-        $receiver->remarks = '流水号：' . date('md', $storeOrder->pay_time) . str_pad($storeOrder->order_seq, 4, '0', STR_PAD_LEFT);
+        $receiver->remarks = '流水号：' . get_order_seq($storeOrder->pay_time, $storeOrder->order_seq);
         $orderCalculate->receiverList = (new OrderCalculateReceiverList())->add($receiver);
         log_develop('闪送订单计费构造参数: ' . json_encode($orderCalculate, JSON_UNESCAPED_UNICODE));
         return $this->merchant->orderCalculate($orderCalculate);

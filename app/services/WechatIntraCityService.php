@@ -167,7 +167,7 @@ class WechatIntraCityService
             $orderPayload->user_lng = $order['user_lng'];
             $orderPayload->user_lat = $order['user_lat'];
             $orderPayload->user_address = $order['user_address'];
-            $orderPayload->order_seq = date('md', $order['pay_time']) . str_pad($order['order_seq'], 4, '0', STR_PAD_LEFT);
+            $orderPayload->order_seq = get_order_seq($order['pay_time'], $order['order_seq']);
             //$previewOrderPayload->verify_code_type = $order['verify_code_type'] ?: 0;
             $orderPayload->order_detail_path = $this->getApi()->getConfig()->getOrderDetailPath();
             $orderPayload->callback_url = $this->getApi()->getConfig()->getCallbackUrl();
