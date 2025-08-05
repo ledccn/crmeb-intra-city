@@ -1,6 +1,6 @@
 {
   "name": "ledc/crmeb-intra-city",
-  "description": "Crmeb单商户系统-微信同城配送&闪送",
+  "description": "CRMEB单商户系统-微信同城配送&闪送",
   "type": "library",
   "license": "MIT",
   "autoload": {
