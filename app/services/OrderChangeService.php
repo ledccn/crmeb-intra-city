@@ -98,13 +98,14 @@ class OrderChangeService
             throw new ValidateException('订单已呼叫配送员，请联系客服');
         }
 
-        if ($expected_finished_time <= $storeOrder->expected_finished_time) {
-            throw new ValidateException('修改后时间不能早于当前期望送达时间');
-        }
+        // 调整：用户申请的期望送达时间允许跨天，但需客服审核
+//        if ($expected_finished_time <= $storeOrder->expected_finished_time) {
+//            throw new ValidateException('修改后时间不能早于当前期望送达时间');
+//        }
 
-        if (date('Y-m-d', $storeOrder->expected_finished_time) !== date('Y-m-d', $expected_finished_time)) {
-            throw new ValidateException('修改后时间不能跨天');
-        }
+//        if (date('Y-m-d', $storeOrder->expected_finished_time) !== date('Y-m-d', $expected_finished_time)) {
+//            throw new ValidateException('修改后时间不能跨天');
+//        }
 
         // 缓存用户提交的待变更数据
         $this->setCache(compact('expected_finished_time', 'expected_finished_start_time', 'expected_finished_end_time'));
