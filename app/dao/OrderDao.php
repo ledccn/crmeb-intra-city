@@ -49,6 +49,7 @@ class OrderDao
         return $model->db()->where('paid', StoreOrderPaidEnums::PAID)
             ->where('pay_time', '>=', time() - 86400 * $days_ago)
             ->where('is_del', 0)
+            ->where('pid', '>=', 0)
             ->where('status', '=', StoreOrderStatusEnums::PENDING)
             ->where('refund_status', '=', StoreOrderRefundStatusEnums::NOT_REFUNDED)
             ->where('expected_finished_time', '<=', time() + $warningWindow);
